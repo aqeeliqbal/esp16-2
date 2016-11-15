@@ -63,9 +63,9 @@ void task1(void)
 }
 
 /*************************************************************
- * Task2
+ * Task2 hello it Ali
  * LED0 goes dark
- * LED1 lights up
+ * LED1 lights up 
  ************************************************************/
 void task2(void)
 {
