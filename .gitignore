@@ -9,6 +9,7 @@ nbproject
 .project
 .cproject
 .settings
+.framework
 composer.lock
 vendor/bin
 data/logs
@@ -18,3 +19,4 @@ module/Application/language/*.po
 make_makefile.sh
 Makefile
 composer.cproject.*
+*~
