@@ -74,9 +74,9 @@ void ROSA_init(void)
 	TCBLIST = NULL;
 	EXECTASK = NULL;
 
-	//Initialize the timer to 100 ms period.
+	//Initialize the timer to 1 ms period.
 	//...
-	//timerInit(100);
+	timerInit(1);
 	//...
 }
 
@@ -142,4 +142,124 @@ void ROSA_tcbInstall(tcb * tcbTask)
 		tcbTmp->nexttcb = tcbTask;			//Install tcb last in the list
 		tcbTask->nexttcb = TCBLIST;			//Make the list circular
 	}
+}
+
+
+
+//0 everything is OK
+//1 READYQUEUE failed to initialize
+//2 WAITINGQUEUE failed to initialize
+int ROSA_Extended_Init(void){
+	ROSA_init();
+	if(queue_init(READYQUEUE)) return 1;
+	if(queue_init(WAITINGQUEUE)) return 2;
+	
+	//create idle task
+	return 0;
+}
+int ROSA_Extended_Start(void){
+	ROSA_start();
+	//Does this have to be included?
+	//timerStart();
+	return 0;
+}
+
+tcb * ROSA_prvGetFirstFromReadyQueue(void){
+	tcb* firstTask = queue_getFirst(READYQUEUE)->task_tcb;
+	//if firstTask == NULL, give the Idle task!
+	return firstTask;
+}
+
+//0 1 and 2 are described in queue_push
+//3 null pointer
+//4 task already in the queue
+int ROSA_prvAddToReadyQueue(tcb *task){
+	if(task == NULL){
+		return 3;
+	}
+	if(queue_getPosition(READYQUEUE, task) == -1){
+		return 4;
+	}
+	queue_item new_item;
+	new_item.task_tcb = task;
+	new_item.value = task->priority;
+	return queue_push(READYQUEUE, &new_item, 1);
+}
+//0 everything is ok
+//1 null pointer
+//2 task not in the queue
+//3 removal failed
+int ROSA_prvRemoveFromReadyQueue(tcb *task){
+	if(task == NULL){
+		return 1;
+	}
+	if(queue_getPosition(READYQUEUE, task) != -1){
+		return 2;
+	}
+	if(queue_remove(READYQUEUE, task, 1).task_tcb == NULL){
+		return 3;
+	}
+	return 0;
+}
+
+
+//0 everything is ok
+//1 2 3 defined in Remove function
+//4 5 6 7 defined in Add function
+int ROSA_prvUpdateReadyQueue(tcb *modifiedTask){
+	int errorMessage;
+	errorMessage = ROSA_prvRemoveFromReadyQueue(modifiedTask);
+	if(errorMessage){
+		return errorMessage;
+	}
+	errorMessage = ROSA_prvAddToReadyQueue(modifiedTask);
+	if(errorMessage){
+		return errorMessage + 3;
+	}
+	return 0;
+}
+
+tcb * ROSA_prvGetFirstFromWaitingQueue(void){
+	tcb* firstTask = queue_getFirst(WAITINGQUEUE)->task_tcb;
+	//if firstTask == NULL, give the Idle task!
+	return firstTask;
+}
+
+//0 1 and 2 are described in queue_push
+//3 null pointer
+//4 task already in the queue
+//wake_time should be of the proper type
+int ROSA_prvAddToWaitingQueue(tcb *task, unsigned int wake_time){
+	if(task == NULL){
+		return 3;
+	}
+	if(queue_getPosition(WAITINGQUEUE, task) == -1){
+		return 4;
+	}
+	queue_item new_item;
+	new_item.task_tcb = task;
+	new_item.value = wake_time;
+	return queue_push(WAITINGQUEUE, &new_item, 0);
+}
+
+//0 everything is ok
+//1 null pointer
+//2 task not in the queue
+//3 removal failed
+int ROSA_prvRemoveFromWaitingQueue(tcb *task){
+	if(task == NULL){
+		return 1;
+	}
+	if(queue_getPosition(WAITINGQUEUE, task) != -1){
+		return 2;
+	}
+	if(queue_remove(WAITINGQUEUE, task, 0).task_tcb == NULL){
+		return 3;
+	}
+	return 0;
+}
+
+//return values defined in queue_decreaseValues
+int ROSA_prvDecreasetWaitingQueueValues(unsigned int offset){
+	return queue_decreaseValues(WAITINGQUEUE, offset);
 }
