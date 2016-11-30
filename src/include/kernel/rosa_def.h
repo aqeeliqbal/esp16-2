@@ -53,6 +53,8 @@ typedef struct tcb_record_t {
 	int savesr;				//The current status register
 	int retaddr;			//The return address
 	int savereg[15];		//The CPU registers
+	unsigned int priority;
+	unsigned int original_priority;
 } tcb;
 
 #endif /* rosa_def_H_ */
