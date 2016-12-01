@@ -190,6 +190,7 @@ int ROSA_prvAddToReadyQueue(tcb *task){
 	new_item.value = task->priority;
 	return queue_push(READYQUEUE, &new_item, 1);
 }
+
 //0 everything is ok
 //1 null pointer
 //2 task not in the queue
@@ -209,8 +210,8 @@ int ROSA_prvRemoveFromReadyQueue(tcb *task){
 
 
 //0 everything is ok
-//1 2 3 defined in Remove function
-//4 5 6 7 defined in Add function
+//1 2 3 defined in ROSA_prvRemoveFromReadyQueue
+//4 5 6 7 defined in ROSA_prvAddToReadyQueue
 int ROSA_prvUpdateReadyQueue(tcb *modifiedTask){
 	int errorMessage;
 	errorMessage = ROSA_prvRemoveFromReadyQueue(modifiedTask);
@@ -267,4 +268,16 @@ int ROSA_prvRemoveFromWaitingQueue(tcb *task){
 //return values defined in queue_decreaseValues
 int ROSA_prvDecreasetWaitingQueueValues(unsigned int offset){
 	return queue_decreaseValues(WAITINGQUEUE, offset);
+}
+
+//return values defined by ROSA_prvUpdateReadyQueue
+int ROSA_prvRaiseTaskPriority(tcb *task, unsigned int new_priority){
+	task->priority = new_priority;
+	return ROSA_prvUpdateReadyQueue(task);
+}
+
+//return values defined by ROSA_prvUpdateReadyQueue
+int ROSA_prvResetTaskPriority(tcb *task){
+	task->priority = task->original_priority;
+	return ROSA_prvUpdateReadyQueue(task);
 }
