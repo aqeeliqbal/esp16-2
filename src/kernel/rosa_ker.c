@@ -151,6 +151,11 @@ void ROSA_tcbInstall(tcb * tcbTask)
 //2 WAITINGQUEUE failed to initialize
 int ROSA_Extended_Init(void){
 	ROSA_init();
+	
+	interruptInit();
+	interruptEnable();
+	timerPeriodSet(1);
+	
 	if(queue_init(READYQUEUE)) return 1;
 	if(queue_init(WAITINGQUEUE)) return 2;
 	
@@ -158,9 +163,9 @@ int ROSA_Extended_Init(void){
 	return 0;
 }
 int ROSA_Extended_Start(void){
+	timerStart();
+	
 	ROSA_start();
-	//Does this have to be included?
-	//timerStart();
 	return 0;
 }
 
