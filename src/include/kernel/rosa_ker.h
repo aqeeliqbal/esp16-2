@@ -28,12 +28,16 @@
 #define _ROSA_KER_H_
 
 #include "rosa_def.h"
+#include "rosa_queue.h"
 
 /***********************************************************
  * Global variables
  ***********************************************************/
 extern tcb * TCBLIST;
 extern tcb * EXECTASK;
+
+queue* READYQUEUE;
+queue* WAITINGQUEUE;
 
 
 /***********************************************************
@@ -66,11 +70,28 @@ __attribute__((__interrupt__)) extern void timerISR(void);
 void ROSA_init(void);
 void ROSA_tcbCreate(tcb * tcbTask, char tcbName[NAMESIZE], void *tcbFunction, int * tcbStack, int tcbStackSize);
 
+int ROSA_Extended_Init(void);
+int ROSA_Extended_Start(void);
+
 //Install a new task TCB into ROSA
 extern void ROSA_tcbInstall(tcb *task);
 
 //Start running the ROSA kernel
 //This start running the created and installed tasks.
 extern void ROSA_start(void);
+
+tcb * ROSA_prvGetFirstFromReadyQueue(void);
+int ROSA_prvAddToReadyQueue(tcb *task);
+int ROSA_prvRemoveFromReadyQueue(tcb *task);
+int ROSA_prvUpdateReadyQueue(tcb *modifiedTask);
+
+tcb * ROSA_prvGetFirstFromWaitingQueue(void);
+//wake_time should be of the proper type
+int ROSA_prvAddToWaitingQueue(tcb *task, unsigned int wake_time);
+int ROSA_prvRemoveFromWaitingQueue(tcb *task);
+int ROSA_prvDecreasetWaitingQueueValues(unsigned int offset);
+
+int ROSA_prvRaiseTaskPriority(tcb *task, unsigned int new_priority);
+int ROSA_prvResetTaskPriority(tcb *task);
 
 #endif /* _ROSA_KER_H_ */

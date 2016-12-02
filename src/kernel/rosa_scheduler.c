@@ -37,5 +37,6 @@
 void scheduler(void)
 {
 	//Find the next task to execute
-	EXECTASK = EXECTASK->nexttcb;
+	//EXECTASK = EXECTASK->nexttcb;
+	EXECTASK = ROSA_prvGetFirstFromReadyQueue();
 }
