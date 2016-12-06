@@ -84,10 +84,10 @@ void ROSA_init(void)
  * ROSA_tcbCreate
  *
  * Comment:
- * 	Create the TCB with correct values.
+ * 	Create & Install the TCB with correct values.
  *
  **********************************************************/
-void ROSA_tcbCreate(tcb * tcbTask, char tcbName[NAMESIZE], void *tcbFunction, int * tcbStack, int tcbStackSize)
+void ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction, int * tcbStack, int tcbStackSize, int taskPriority, void *tcbArg, semHandle  *semaphores, int semaCount)
 {
 	int i;
 
@@ -112,21 +112,17 @@ void ROSA_tcbCreate(tcb * tcbTask, char tcbName[NAMESIZE], void *tcbFunction, in
 	//Set the initial SR.
 	tcbTask->savesr = ROSA_INITIALSR;
 
+	//Setting our custom values
+	tcbTask->originalpriority = taskPriority;
+	tcbTask->priority = taskPriority;
 
-	//Initialize context.
-	contextInit(tcbTask);
-}
+	for(int i =0; i<semaCount: i++)
+	{
+		ROSA_SemaphoreRegister(semaphores[i], tcbTask);
+	}
 
-
-/***********************************************************
- * ROSA_tcbInstall
- *
- * Comment:
- * 	Install the TCB into the TCBLIST.
- *
- **********************************************************/
-void ROSA_tcbInstall(tcb * tcbTask)
-{
+	tcbTask->activeSemaphores = calloc(semaCount,sizeof(semHandle));
+	
 	tcb * tcbTmp;
 
 	/* Is this the first tcb installed? */
@@ -143,10 +139,112 @@ void ROSA_tcbInstall(tcb * tcbTask)
 		tcbTmp->nexttcb = tcbTask;			//Install tcb last in the list
 		tcbTask->nexttcb = TCBLIST;			//Make the list circular
 	}
+	
+	//Initialize context.
+	contextInit(tcbTask);
 }
 
 
+/***********************************************************
+ * ROSA_tcbInstall
+ *
+ * Comment:
+ * 	Delete the TCB into the TCBLIST.
+ *
+ **********************************************************/
+void ROSA_tcbDelete(tcbHandle *tcbTask, semHandle  *semaphores, int semaCount) 
+{
+	//To be provided by Ali and Per
+	int result = 0;
+	for(int i =0; i<semaCount: i++)
+	{
+		
+		ROSA_SemaphoreUnregister(semaphores[i], tcbTask);
+		{
+		
+	tcbTask->activeSemaphores = calloc(semaCount,sizeof(semHandle)); 
+	}
+	if(result == 0)
 
+	ROSA_prvRemoveFromReadyQueue(tcbTask);
+	ROSA_prvRemoveFromWaitingQueue(tcbTask);
+
+	tcb * tcbTmp;
+	tcb * tcbNextTask;
+
+		tcbTmp = TCBLIST;					
+		while(tcbTmp->nexttcb != tcbTask) {
+			tcbTmp = tcbTmp->nexttcb;
+		}
+		tcbTmp->nexttcb = tcbTask->nexttcb;			
+		tcbTask->nexttcb = NULL;	
+		tcbTask = NULL;		
+	
+}
+/***********************************************************
+ *  ROSA_tcbResume
+ *
+ * Comment:
+ * 	
+ *
+ **********************************************************/
+void ROSA_tcbResume(void *tcbTask)
+{
+	checkinTCBLIST(tcb *task);
+	if(error == 0) //assuming that there is no error, it returns 0
+	{
+	ROSA_tcbSuspend(void *tcbTask)
+	}
+	//now return error variable
+	if(error == 0) //meaning task has already been suspended.
+	{
+	return ROSA_prvAddToReadyQueue(tcbTask);
+	}
+/***********************************************************
+ * ROSA_tcbSuspend
+ *
+ * Comment:
+ * 	Delete the TCB into the TCBLIST.
+ *
+ **********************************************************/
+void ROSA_tcbSuspend(void *tcbTask)
+{
+     int errorMessage;
+	 if( (ROSA_prvCheckInReadyQueue(tcb *task)==0) && (ROSA_prvCheckInWaitingQueue(tcb *task)==0) ) // check if it is not in Ready and waiting Q
+	 if(errorMessage){
+		 return errorMessage +3 ;
+		 }
+	 if ((checkinTCBLIST(tcb *task)==0)) // check if this task exists
+	 if(errorMessage){
+		 return errorMessage +4 ;
+	 }
+	//Now check what ROSA_prvRemoveFromWaitingQueue(tcbTask) returns and just put that value.
+	error = ROSA_prvRemoveFromReadyQueue(tcbTask);
+	if(error == 0) //assuming that there is no error, it returns 0
+	{
+		int return_value  = ROSA_prvAddToWaitingQueue(tcbTask);
+	}
+	//now return error variable
+	return  0 ;
+}	
+/***********************************************************
+ * ROSA_tcbSuspend
+ *
+ * Comment:
+ * 	Delete the TCB into the TCBLIST.
+ *
+ **********************************************************/
+checkinTCBLIST(tcbTask);
+for(i = 0; i < TCBLIST; i++)
+{
+	if ((TCBLIST[i].taskID == tcbTask.id))
+	{
+	RETURN 0;
+	}
+	//if found
+	break;
+}
+	
 //0 everything is OK
 //1 READYQUEUE failed to initialize
 //2 WAITINGQUEUE failed to initialize
@@ -191,6 +289,8 @@ int ROSA_prvAddToReadyQueue(tcb *task){
 	new_item.value = task->priority;
 	return queue_push(READYQUEUE, &new_item, 1);
 }
+	
+	
 
 //0 everything is ok
 //1 null pointer
