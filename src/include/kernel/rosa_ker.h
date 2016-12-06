@@ -94,4 +94,7 @@ int ROSA_prvDecreasetWaitingQueueValues(unsigned int offset);
 int ROSA_prvRaiseTaskPriority(tcb *task, unsigned int new_priority);
 int ROSA_prvResetTaskPriority(tcb *task);
 
+int ROSA_prvCheckInReadyQueue(tcb *task);
+int ROSA_prvCheckInWaitingQueue(tcb *task);
+
 #endif /* _ROSA_KER_H_ */
