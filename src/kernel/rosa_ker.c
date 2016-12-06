@@ -232,6 +232,10 @@ tcb * ROSA_prvGetFirstFromWaitingQueue(void){
 	return firstTask;
 }
 
+unsigned int ROSA_prvGetFirstWakeTime(void){
+	return queue_getFirst(WAITINGQUEUE)->value;
+}
+
 //0 1 and 2 are described in queue_push
 //3 null pointer
 //4 task already in the queue
