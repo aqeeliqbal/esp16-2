@@ -38,15 +38,12 @@ typedef struct sem_record_t {
     semaphore_reglist* reglist;
 } semaphore;
 
-/* Private function declarations */
-
-int ROSA_prvSemaphoreRegister(semHandle sem, tcb* task);
-int ROSA_prvSemaphoreUnregister(semHandle sem, tcb* task);
-semaphore* ROSA_prvSemaphoreGet(semHandle sem);
-
 /* Global variables not accessible outside this file */
 
 semaphore* semaphores[16];
+
+/* Internal functions used by this file only */
+semaphore* ROSA_prvSemaphoreGet(semHandle sem);
 
 /* Public function definitions */
 
@@ -71,6 +68,8 @@ unsigned int ROSA_semaphoreCreate(semHandle *sem) {
             return 0;
         }
     }
+
+	
 
     return 2; /* There is no more room for semaphores */
 }
@@ -127,7 +126,14 @@ int ROSA_prvSemaphoreRegister(semHandle s, tcb* task) {
 	semaphore_reglist *temp = sem->reglist;
 	semaphore_reglist *ptr;
 
+	if (sem == NULL) {
+		return 1;
+	}
+
 	ptr = (semaphore_reglist *)calloc(1, sizeof(semaphore_reglist));
+
+	if (ptr == NULL) return 2;
+
 	ptr->task = task;
 	//ptr->next = NULL;
 
@@ -156,6 +162,10 @@ int ROSA_prvSemaphoreUnregister(semHandle s, tcb* task) {
 	semaphore_reglist *temp1 = sem->reglist;
 	semaphore_reglist *ptr = NULL;
 	
+	if (temp1 == NULL) {
+		return 1;
+	}
+
 	if (temp1->task == task)
 	{
 		ptr = temp1;
@@ -163,9 +173,8 @@ int ROSA_prvSemaphoreUnregister(semHandle s, tcb* task) {
 		free(ptr);
 		return 0;
 	}
-	while (temp1->next != NULL)
-	{
-		temp1 = temp1->next;
+
+	do {
 		if (temp1->next->task == task)
 		{
 			ptr = temp1->next;
@@ -173,8 +182,11 @@ int ROSA_prvSemaphoreUnregister(semHandle s, tcb* task) {
 			free(ptr);
 			return 0;
 		}
-	}
-	return 0;
+
+		temp1 = temp1->next;
+	} while (temp1->next != NULL);
+
+	return 2;
 }
 
 semaphore* ROSA_prvSemaphoreGet(semHandle sem) {

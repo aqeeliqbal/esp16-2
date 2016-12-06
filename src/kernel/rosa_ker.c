@@ -26,6 +26,7 @@
 
 //Kernel includes
 #include "kernel/rosa_def.h"
+#include "kernel/rosa_sem.h"
 #include "kernel/rosa_ext.h"
 #include "kernel/rosa_ker.h"
 #include "kernel/rosa_tim.h"
@@ -87,7 +88,7 @@ void ROSA_init(void)
  * 	Create & Install the TCB with correct values.
  *
  **********************************************************/
-void ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction, int * tcbStack, int tcbStackSize, int taskPriority, void *tcbArg, semHandle  *semaphores, int semaCount)
+void ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction, int * tcbStack, int tcbStackSize, int taskPriority, void *tcbArg, semHandle *semaphores, int semaCount)
 {
 	int i;
 
