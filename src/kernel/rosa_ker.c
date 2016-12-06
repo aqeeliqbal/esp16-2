@@ -210,23 +210,43 @@ void ROSA_tcbResume(void *tcbTask)
 void ROSA_tcbSuspend(void *tcbTask)
 {
      int errorMessage;
-	 if( (ROSA_prvCheckInReadyQueue(tcb *task)==0) && (ROSA_prvCheckInWaitingQueue(tcb *task)==0) ) // check if it is not in Ready and waiting Q
-	 if(errorMessage){
-		 return errorMessage +3 ;
-		 }
-	 if ((checkinTCBLIST(tcb *task)==0)) // check if this task exists
-	 if(errorMessage){
-		 return errorMessage +4 ;
-	 }
-	//Now check what ROSA_prvRemoveFromWaitingQueue(tcbTask) returns and just put that value.
-	error = ROSA_prvRemoveFromReadyQueue(tcbTask);
-	if(error == 0) //assuming that there is no error, it returns 0
-	{
-		int return_value  = ROSA_prvAddToWaitingQueue(tcbTask);
-	}
-	//now return error variable
-	return  0 ;
-}	
+
+if ((checkinTCBLIST(tcb *task)==0)) // check if this task exists
+{
+//Now we know that the task exists. Now we check in queues.
+
+if( (ROSA_prvCheckInReadyQueue(tcb *task)==0) && (ROSA_prvCheckInWaitingQueue(tcb *task)==0) )
+{
+//now we know that the task is either in readyqueue or in waiting queue and the task exists.
+//Now check what ROSA_prvRemoveFromWaitingQueue(tcbTask) returns and just put that value.
+errorMessage = ROSA_prvRemoveFromReadyQueue(tcbTask);
+if(errorMessage == 0) //assuming that there is no error, it returns 0
+{
+//successfully removed from readyqueue now removing from waitingqueue
+errorMessage  = ROSA_prvAddToWaitingQueue(tcbTask);
+if(errorMessage == 0)  //assuming that there is no error, it returns 0
+return 0;//operation successful
+else
+{
+//means it failed to remove from waitingqueue
+return errorMessage +3
+}
+ 
+else
+{
+//means it failed to remove from readyqueue
+return errorMessage +2
+}
+}
+else
+{
+//This means that the task is already in suspended mode or task doesnt exist.
+return errorMessage +3; //means error, you cannot suspend a task which is not in any of the above list. Either it doesnt exist or is already in suspend state.
+}
+}
+else
+  return errorMessage +4 ;//means error, you cannot suspend a task which doesnt exist.
+}
 /***********************************************************
  * ROSA_tcbSuspend
  *
