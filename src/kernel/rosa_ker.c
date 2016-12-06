@@ -76,7 +76,7 @@ void ROSA_init(void)
 
 	//Initialize the timer to 1 ms period.
 	//...
-	timerInit(1);
+	
 	//...
 }
 
@@ -111,6 +111,7 @@ void ROSA_tcbCreate(tcb * tcbTask, char tcbName[NAMESIZE], void *tcbFunction, in
 
 	//Set the initial SR.
 	tcbTask->savesr = ROSA_INITIALSR;
+
 
 	//Initialize context.
 	contextInit(tcbTask);
@@ -150,15 +151,15 @@ void ROSA_tcbInstall(tcb * tcbTask)
 //1 READYQUEUE failed to initialize
 //2 WAITINGQUEUE failed to initialize
 int ROSA_Extended_Init(void){
-	ROSA_init();
-	
-	interruptInit();
-	interruptEnable();
-	timerPeriodSet(1);
 	
 	if(queue_init(READYQUEUE)) return 1;
 	if(queue_init(WAITINGQUEUE)) return 2;
 	
+	timerInit(100);
+	timerPeriodSet(1);
+	interruptInit();
+	interruptEnable();
+	ROSA_init();
 	//create idle task
 	return 0;
 }
@@ -182,7 +183,7 @@ int ROSA_prvAddToReadyQueue(tcb *task){
 	if(task == NULL){
 		return 3;
 	}
-	if(queue_getPosition(READYQUEUE, task) == -1){
+	if(queue_getPosition(READYQUEUE, task) != -1){
 		return 4;
 	}
 	queue_item new_item;
@@ -199,7 +200,7 @@ int ROSA_prvRemoveFromReadyQueue(tcb *task){
 	if(task == NULL){
 		return 1;
 	}
-	if(queue_getPosition(READYQUEUE, task) != -1){
+	if(queue_getPosition(READYQUEUE, task) == -1){
 		return 2;
 	}
 	if(queue_remove(READYQUEUE, task, 1).task_tcb == NULL){
@@ -239,7 +240,7 @@ int ROSA_prvAddToWaitingQueue(tcb *task, unsigned int wake_time){
 	if(task == NULL){
 		return 3;
 	}
-	if(queue_getPosition(WAITINGQUEUE, task) == -1){
+	if(queue_getPosition(WAITINGQUEUE, task) != -1){
 		return 4;
 	}
 	queue_item new_item;
@@ -256,7 +257,7 @@ int ROSA_prvRemoveFromWaitingQueue(tcb *task){
 	if(task == NULL){
 		return 1;
 	}
-	if(queue_getPosition(WAITINGQUEUE, task) != -1){
+	if(queue_getPosition(WAITINGQUEUE, task) == -1){
 		return 2;
 	}
 	if(queue_remove(WAITINGQUEUE, task, 0).task_tcb == NULL){

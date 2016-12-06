@@ -27,6 +27,11 @@
 #include "rosa_config.h"
 #include "drivers/delay.h"
 #include "kernel/rosa_int.h"
+#include "stdint.h" //for uint32_t
+
+ticktime ticks = 0;
+
+ticktime ROSA_getTicks(void); //declaration
 
 /***********************************************************
  * timerInterruptHandler
@@ -39,11 +44,23 @@ void timerISR(void)
 {
 	int sr;
 	volatile avr32_tc_t * tc = &AVR32_TC;
-
+ticks++;
 	//Read the timer status register to determine if this is a valid interrupt
 	sr = tc->channel[0].sr;
 	if(sr & AVR32_TC_CPCS_MASK)
 		ROSA_yieldFromISR();
+}
+
+
+/********************************************
+ROSA_getTicks
+get the current clock ticks
+
+********************************************/
+
+ticktime ROSA_getTicks(void){
+	
+	return ticks;
 }
 
 

@@ -48,6 +48,7 @@
       <ToolNumber>00A200019931</ToolNumber>
       <ToolName>AVR Dragon</ToolName>
     </com_atmel_avrdbg_tool_avrdragon>
+    <preserveEEPROM>true</preserveEEPROM>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <ToolchainSettings>
@@ -170,6 +171,12 @@
       <SubType>compile</SubType>
     </None>
     <Folder Include="src" />
+    <Compile Include="src\include\kernel\rosa_queue.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\kernel\rosa_queue.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\main.c">
       <SubType>compile</SubType>
     </Compile>

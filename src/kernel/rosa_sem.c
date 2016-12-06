@@ -146,11 +146,59 @@ unsigned int ROSA_semaphoreGive(semHandle sGiveHandle) {
 
 /* Private function definitions */
 
-void ROSA_SemaphoreRegister(semHandle sem, tcb* task) {
+void ROSA_prvSemaphoreRegister(semHandle s, tcb* task) {
+    Semaphore* sem = ROSA_prvSemaphoreGet(s);
+	semaphore_reglist *temp = sem->reglist;
+	semaphore_reglist *ptr;
+
+	ptr = (semaphore_reglist *)calloc(1, sizeof(semaphore_reglist));
+	ptr->prio = task;
+	//ptr->next = NULL;
+
+	if (temp == NULL || ptr->prio > temp->prio)
+	{					//Executes when linked list is empty 
+		ptr->next = sem->reglist;
+		sem->reglist = ptr;
+		return;
+	}
+
+	while (temp->next != NULL) {
+		if (ptr->prio > temp->next->prio) {
+			ptr->next = temp->next;
+			temp->next = ptr;
+			return;
+		}
+		temp = temp->next;
+	}
+	temp->next = ptr;
+	return;
 
 }
 
-void ROSA_SemaphoreUnregister(semHandle sem, tcb* task) {
+void ROSA_prvSemaphoreUnregister(semHandle s, tcb* task) {
+    Semaphore* sem = ROSA_prvSemaphoreGet(s);
+	semaphore_reglist *temp1 = sem->reglist;
+	semaphore_reglist *ptr;
+	ptr = temp1;
+	if (temp1->prio == task)
+	{
+		ptr = temp1;
+		sem->reglist = temp1->next;
+		free(ptr);
+		return 0;
+	}
+	while (temp1->next != NULL)
+	{
+	 temp1 = temp1->next;
+		if (temp1->next->task == task)
+		{
+			ptr = temp1->next;
+			temp1->next = temp1->next->next;
+			free(ptr);
+			return 0;
+		}
+	}
+	return 0;
 
 }
 

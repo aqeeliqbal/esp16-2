@@ -83,7 +83,7 @@ void task2(void)
 int main(void)
 {
 	//Initialize the ROSA kernel
-	ROSA_init();
+	ROSA_Extended_Init();
 
 	//Create tasks and install them into the ROSA kernel
 	ROSA_tcbCreate(&t1_tcb, "tsk1", task1, t1_stack, T1_STACK_SIZE);
@@ -91,8 +91,12 @@ int main(void)
 	ROSA_tcbCreate(&t2_tcb, "tsk2", task2, t2_stack, T2_STACK_SIZE);
 	ROSA_tcbInstall(&t2_tcb);
 
+		//ROSA_prvAddToReadyQueue(&t1_tcb);
+		
+		//ROSA_prvAddToReadyQueue(&t2_tcb);
+
 	//Start the ROSA kernel
-	ROSA_start();
+	ROSA_Extended_Start();
 	/* Execution will never return here */
 	while(1);
 }

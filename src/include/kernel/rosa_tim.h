@@ -28,7 +28,7 @@
 #define _ROSA_TIMER_H_
 
 #include <avr32/io.h>
-
+#include "stdint.h"  //for uint32_t
 /***********************************************************
  * Kernel timer functions
  ***********************************************************/
@@ -50,4 +50,5 @@ extern void timerRCSet(int);
 extern int timerPrescale;
 extern int timerRC;
 
+typedef uint32_t ticktime; //defines ticktime
 #endif /* _ROSA_TIMER_H_ */
