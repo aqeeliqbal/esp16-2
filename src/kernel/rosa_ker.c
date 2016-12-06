@@ -282,3 +282,35 @@ int ROSA_prvResetTaskPriority(tcb *task){
 	task->priority = task->original_priority;
 	return ROSA_prvUpdateReadyQueue(task);
 }
+
+// 0 - task is not in the ready queue
+// 1 - task found in the ready queue
+// 2 - null pointer, invalid input
+int ROSA_prvCheckInReadyQueue(tcb *task){
+	if(task == NULL){
+		return 2;
+	}
+	int return_value = queue_getPosition(READYQUEUE, task);
+	if(return_value == -1){
+		return 0;
+	}
+	else{
+		return 1;
+	}
+}
+
+// 0 - task is not in the waiting queue
+// 1 - task found in the waiting queue
+// 2 - null pointer, invalid input
+int ROSA_prvCheckInWaitingQueue(tcb *task){
+	if(task == NULL){
+		return 2;
+	}
+	int return_value = queue_getPosition(WAITINGQUEUE, task);
+	if(return_value == -1){
+		return 0;
+	}
+	else{
+		return 1;
+	}
+}
