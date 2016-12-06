@@ -20,3 +20,6 @@ make_makefile.sh
 Makefile
 composer.cproject.*
 *~
+*.atsuo
+ROSA_student_6_2.atsln
+ROSA_student_6_2.cproj
