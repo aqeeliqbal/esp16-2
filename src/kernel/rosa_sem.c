@@ -1,4 +1,5 @@
 #include "../include/kernel/rosa_sem.h"
+#include "../include/kernel/rosa_ker.h"
 #include <stdlib.h>
 /*#include <stdio.h>*/
 
@@ -63,9 +64,9 @@ typedef struct sem_record_t {
 
 /* Private function declarations */
 
-void ROSA_SemaphoreRegister(semHandle sem, tcb* task);
-void ROSA_SemaphoreUnregister(semHandle sem, tcb* task);
-semaphore* ROSA_semaphoreGet(semHandle sem);
+void ROSA_prvSemaphoreRegister(semHandle sem, tcb* task);
+void ROSA_prvSemaphoreUnregister(semHandle sem, tcb* task);
+semaphore* ROSA_prvSemaphoreGet(semHandle sem);
 
 /* Global variables not accessible outside this file */
 
@@ -100,19 +101,26 @@ unsigned int ROSA_semaphoreCreate(semHandle *sem) {
 
 unsigned int ROSA_semaphoreTake(semHandle sTakeHandle) {
     semaphore* sem = ROSA_semaphoreGet(sTakeHandle);
-
+    tcb* task = ROSA_prvGetCurrentTask();
+    semaphore_reglist* it = NULL;
+    
     if (sem == NULL) {
         return 1;
     }
     
-    if (sem->owner != NULL) {
+    if (sem->owner != NULL) {       /* This should never happen */
         return 2;
     }
-    
-    sem->owner = ROSA_schedulerGetCurrentTask();
-    ROSA_schedulerRaisePriority(sem->owner,sem->reglist->task->prio);
 
-    return 0;
+    for (it=sem->regList; it != NULL; it = it->next) {
+        if (it->task == task) {
+            sem->owner = task;
+            ROSA_prvRaiseTaskPriority(task, sem->reglist->task->prio);
+            return 0;
+        }
+    }
+
+    return 3;                       /* Not registered to semaphore */
 }
 
 unsigned int ROSA_semaphoreGive(semHandle sGiveHandle) {
@@ -130,7 +138,7 @@ unsigned int ROSA_semaphoreGive(semHandle sGiveHandle) {
         return 3;
     }
 
-    ROSA_schedulerResetPriority(sem->owner);
+    ROSA_prvResetTaskPriority(sem->owner);
     sem->owner = NULL;
 
     return 0;
