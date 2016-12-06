@@ -86,6 +86,7 @@ int ROSA_prvRemoveFromReadyQueue(tcb *task);
 int ROSA_prvUpdateReadyQueue(tcb *modifiedTask);
 
 tcb * ROSA_prvGetFirstFromWaitingQueue(void);
+unsigned int ROSA_prvGetFirstWakeTime(void);
 //wake_time should be of the proper type
 int ROSA_prvAddToWaitingQueue(tcb *task, unsigned int wake_time);
 int ROSA_prvRemoveFromWaitingQueue(tcb *task);
