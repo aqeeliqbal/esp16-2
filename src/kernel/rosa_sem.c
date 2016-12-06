@@ -1,5 +1,5 @@
-#include "../include/kernel/rosa_sem.h"
-#include "../include/kernel/rosa_ker.h"
+#include "kernel/rosa_sem.h"
+#include "kernel/rosa_ker.h"
 #include <stdlib.h>
 /*#include <stdio.h>*/
 
@@ -7,29 +7,6 @@
 
 #define SEMAPHORE_ACTIVE (1 << 0)
 #define SEMAPHORE_LOCKED (1 << 1)
-
-/* DELETE THIS SECTION LATER - COMMON PRIVATE FUNCTIONS
-
-typedef struct t {
-    uint8_t prio;
-    uint8_t curPrio;
-} tcb;
-
-tcb* ROSA_schedulerGetCurrentTask() {
-    static tcb task = { 3, 0 };
-    return &task;
-}
-
-void ROSA_schedulerRaisePriority(tcb* task, int prio) {
-    task->curPrio = prio;
-}
-
-void ROSA_schedulerResetPriority(tcb* task) {
-    task->curPrio = task->prio;
-}
-
-
-/* END OF SECTION */
 
 /* Structs */
 
@@ -42,7 +19,6 @@ void ROSA_schedulerResetPriority(tcb* task) {
 */
 
 typedef struct sem_reglist_record_t {
-    uint8_t prio;
     tcb* task;
     struct sem_reglist_record_t* next;
 } semaphore_reglist;
@@ -64,8 +40,8 @@ typedef struct sem_record_t {
 
 /* Private function declarations */
 
-void ROSA_prvSemaphoreRegister(semHandle sem, tcb* task);
-void ROSA_prvSemaphoreUnregister(semHandle sem, tcb* task);
+int ROSA_prvSemaphoreRegister(semHandle sem, tcb* task);
+int ROSA_prvSemaphoreUnregister(semHandle sem, tcb* task);
 semaphore* ROSA_prvSemaphoreGet(semHandle sem);
 
 /* Global variables not accessible outside this file */
@@ -100,8 +76,8 @@ unsigned int ROSA_semaphoreCreate(semHandle *sem) {
 }
 
 unsigned int ROSA_semaphoreTake(semHandle sTakeHandle) {
-    semaphore* sem = ROSA_semaphoreGet(sTakeHandle);
-    tcb* task = ROSA_prvGetCurrentTask();
+    semaphore* sem = ROSA_prvSemaphoreGet(sTakeHandle);
+    tcb* task = ROSA_prvGetFirstFromReadyQueue();
     semaphore_reglist* it = NULL;
     
     if (sem == NULL) {
@@ -112,10 +88,10 @@ unsigned int ROSA_semaphoreTake(semHandle sTakeHandle) {
         return 2;
     }
 
-    for (it=sem->regList; it != NULL; it = it->next) {
+    for (it=sem->reglist; it != NULL; it = it->next) {
         if (it->task == task) {
             sem->owner = task;
-            ROSA_prvRaiseTaskPriority(task, sem->reglist->task->prio);
+            ROSA_prvRaiseTaskPriority(task, sem->reglist->task->priority);
             return 0;
         }
     }
@@ -124,7 +100,7 @@ unsigned int ROSA_semaphoreTake(semHandle sTakeHandle) {
 }
 
 unsigned int ROSA_semaphoreGive(semHandle sGiveHandle) {
-    semaphore* sem = ROSA_semaphoreGet(sGiveHandle);
+    semaphore* sem = ROSA_prvSemaphoreGet(sGiveHandle);
     
     if (sem == NULL) {
         return 1;
@@ -134,7 +110,7 @@ unsigned int ROSA_semaphoreGive(semHandle sGiveHandle) {
         return 2;
     }
 
-    if (sem->owner != ROSA_schedulerGetCurrentTask()) {
+    if (sem->owner != ROSA_prvGetFirstFromReadyQueue()) {
         return 3;
     }
 
@@ -146,41 +122,41 @@ unsigned int ROSA_semaphoreGive(semHandle sGiveHandle) {
 
 /* Private function definitions */
 
-void ROSA_prvSemaphoreRegister(semHandle s, tcb* task) {
-    Semaphore* sem = ROSA_prvSemaphoreGet(s);
+int ROSA_prvSemaphoreRegister(semHandle s, tcb* task) {
+    semaphore* sem = ROSA_prvSemaphoreGet(s);
 	semaphore_reglist *temp = sem->reglist;
 	semaphore_reglist *ptr;
 
 	ptr = (semaphore_reglist *)calloc(1, sizeof(semaphore_reglist));
-	ptr->prio = task;
+	ptr->task = task;
 	//ptr->next = NULL;
 
-	if (temp == NULL || ptr->prio > temp->prio)
+	if (temp == NULL || ptr->task->priority > temp->task->priority)
 	{					//Executes when linked list is empty 
 		ptr->next = sem->reglist;
 		sem->reglist = ptr;
-		return;
+		return 0;
 	}
 
 	while (temp->next != NULL) {
-		if (ptr->prio > temp->next->prio) {
+		if (ptr->task->priority > temp->next->task->priority) {
 			ptr->next = temp->next;
 			temp->next = ptr;
-			return;
+			return 0;
 		}
 		temp = temp->next;
 	}
+	
 	temp->next = ptr;
-	return;
-
+	return 0;
 }
 
-void ROSA_prvSemaphoreUnregister(semHandle s, tcb* task) {
-    Semaphore* sem = ROSA_prvSemaphoreGet(s);
+int ROSA_prvSemaphoreUnregister(semHandle s, tcb* task) {
+    semaphore* sem = ROSA_prvSemaphoreGet(s);
 	semaphore_reglist *temp1 = sem->reglist;
-	semaphore_reglist *ptr;
-	ptr = temp1;
-	if (temp1->prio == task)
+	semaphore_reglist *ptr = NULL;
+	
+	if (temp1->task == task)
 	{
 		ptr = temp1;
 		sem->reglist = temp1->next;
@@ -189,7 +165,7 @@ void ROSA_prvSemaphoreUnregister(semHandle s, tcb* task) {
 	}
 	while (temp1->next != NULL)
 	{
-	 temp1 = temp1->next;
+		temp1 = temp1->next;
 		if (temp1->next->task == task)
 		{
 			ptr = temp1->next;
@@ -199,10 +175,9 @@ void ROSA_prvSemaphoreUnregister(semHandle s, tcb* task) {
 		}
 	}
 	return 0;
-
 }
 
-semaphore* ROSA_semaphoreGet(semHandle sem) {
+semaphore* ROSA_prvSemaphoreGet(semHandle sem) {
     if (semaphores[((sem%-1)/16)%16] == NULL) { /* Semaphore not yet created */
         return NULL;
     }
@@ -213,31 +188,3 @@ semaphore* ROSA_semaphoreGet(semHandle sem) {
 
     return &semaphores[(sem-1)/16][(sem-1)%16];
 }
-
-/* DELETE EVERYTHING FROM THIS LINE FORWARD
-
-void print_sem(semHandle sem) {
-    semaphore* s = ROSA_semaphoreGet(sem);
-    printf("semaphore %d: %d,%d\n",(int)s,(int)s->owner,s->flags);
-}
-
-void print_task(tcb* task) {
-    printf("task: %d, %d,\n",task->prio,task->curPrio);
-}
-
-int main(void) {
-    semHandle sem[258];
-    int res,i;
-
-    for (i=0; i<258; i++) {
-        res = ROSA_semaphoreCreate(&sem[i]);
-        printf("Create Semaphore %d: %d %d\n",i+1,res,sem[i]);
-    }
-
-    for (i=240; i<258; i++) {
-        
-    }
-    
-    
-    return 0;
-} /* */
