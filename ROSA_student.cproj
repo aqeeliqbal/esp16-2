@@ -2,7 +2,7 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectVersion>6.2</ProjectVersion>
+    <ProjectVersion>7.0</ProjectVersion>
     <ToolchainName>com.Atmel.AVRGCC32.C</ToolchainName>
     <ProjectGuid>8511294f-51e3-499c-b671-f9fb7c4bfb77</ProjectGuid>
     <Name>ROSA_student</Name>
@@ -26,14 +26,14 @@
     <BootSegment>2</BootSegment>
     <eraseonlaunchrule>1</eraseonlaunchrule>
     <AsfFrameworkConfig>
-      <framework-data xmlns="">
+      <framework-data>
         <options />
         <configurations />
         <files />
         <documentation help="" />
         <offline-documentation help="" />
         <dependencies>
-          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.11.0" />
+          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.22.0" />
         </dependencies>
       </framework-data>
     </AsfFrameworkConfig>
@@ -59,6 +59,11 @@
         <avr32gcc.common.outputfiles.srec>True</avr32gcc.common.outputfiles.srec>
         <avr32gcc.compiler.preprocessor.DoNotSearchSystemDirectories>false</avr32gcc.compiler.preprocessor.DoNotSearchSystemDirectories>
         <avr32gcc.compiler.preprocessor.PreprocessOnly>false</avr32gcc.compiler.preprocessor.PreprocessOnly>
+        <avr32gcc.compiler.directories.IncludePaths>
+          <ListValues>
+            <Value>%24(PackRepoDir)\atmel\UC3A_DFP\1.0.53\include\AT32UC3A0512</Value>
+          </ListValues>
+        </avr32gcc.compiler.directories.IncludePaths>
         <avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>true</avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
         <avr32gcc.compiler.optimization.EnableFastFloatingPointLibrary>false</avr32gcc.compiler.optimization.EnableFastFloatingPointLibrary>
         <avr32gcc.compiler.optimization.EnableUnsafeMatchOptimizations>false</avr32gcc.compiler.optimization.EnableUnsafeMatchOptimizations>
@@ -90,7 +95,17 @@
         <avr32gcc.linker.optimization.GeneratePositionIndependentCode>false</avr32gcc.linker.optimization.GeneratePositionIndependentCode>
         <avr32gcc.linker.optimization.PutReadOnlyDataInWritableDataSection>true</avr32gcc.linker.optimization.PutReadOnlyDataInWritableDataSection>
         <avr32gcc.linker.optimization.AllowDirectReferencesToDataSection>true</avr32gcc.linker.optimization.AllowDirectReferencesToDataSection>
+        <avr32gcc.assembler.general.IncludePaths>
+          <ListValues>
+            <Value>%24(PackRepoDir)\atmel\UC3A_DFP\1.0.53\include\AT32UC3A0512</Value>
+          </ListValues>
+        </avr32gcc.assembler.general.IncludePaths>
         <avr32gcc.assembler.general.AnounceVersion>false</avr32gcc.assembler.general.AnounceVersion>
+        <avr32gcc.preprocessingassembler.general.IncludePaths>
+          <ListValues>
+            <Value>%24(PackRepoDir)\atmel\UC3A_DFP\1.0.53\include\AT32UC3A0512</Value>
+          </ListValues>
+        </avr32gcc.preprocessingassembler.general.IncludePaths>
         <avr32gcc.preprocessingassembler.general.SuppressWarnings>false</avr32gcc.preprocessingassembler.general.SuppressWarnings>
         <avr32gcc.preprocessingassembler.general.AnounceVersion>false</avr32gcc.preprocessingassembler.general.AnounceVersion>
       </Avr32Gcc>
@@ -107,6 +122,7 @@
           <ListValues>
             <Value>../src</Value>
             <Value>../src/include</Value>
+            <Value>%24(PackRepoDir)\atmel\UC3A_DFP\1.0.53\include\AT32UC3A0512</Value>
           </ListValues>
         </avr32gcc.compiler.directories.IncludePaths>
         <avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>True</avr32gcc.compiler.optimization.PrepareFunctionsForGarbageCollection>
@@ -123,6 +139,7 @@
           <ListValues>
             <Value>../src</Value>
             <Value>../src/include</Value>
+            <Value>%24(PackRepoDir)\atmel\UC3A_DFP\1.0.53\include\AT32UC3A0512</Value>
           </ListValues>
         </avr32gcc.assembler.general.IncludePaths>
         <avr32gcc.assembler.debugging.DebugLevel>Default (-g)</avr32gcc.assembler.debugging.DebugLevel>
@@ -130,6 +147,7 @@
           <ListValues>
             <Value>../src</Value>
             <Value>../src/include</Value>
+            <Value>%24(PackRepoDir)\atmel\UC3A_DFP\1.0.53\include\AT32UC3A0512</Value>
           </ListValues>
         </avr32gcc.preprocessingassembler.general.IncludePaths>
         <avr32gcc.preprocessingassembler.debugging.DebugLevel>Default (-Wa,-g)</avr32gcc.preprocessingassembler.debugging.DebugLevel>
@@ -171,10 +189,19 @@
       <SubType>compile</SubType>
     </None>
     <Folder Include="src" />
+    <Compile Include="src\include\kernel\rosa_prv.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\include\kernel\rosa_queue.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\include\kernel\rosa_sem.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\kernel\rosa_queue.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\kernel\rosa_sem.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\main.c">
