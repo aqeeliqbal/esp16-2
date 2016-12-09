@@ -28,6 +28,7 @@
 #define rosa_def_H_
 
 #include "rosa_config.h"
+#include "kernel/rosa_sem.h"
 
 #ifndef NULL
 #define NULL 0
@@ -55,6 +56,8 @@ typedef struct tcb_record_t {
 	int savereg[15];		//The CPU registers
 	unsigned int priority;
 	unsigned int original_priority;
+	semHandle* semaList;
+	int semaCount;
 } tcb;
 
 #endif /* rosa_def_H_ */

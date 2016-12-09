@@ -29,12 +29,14 @@
 
 #include "rosa_def.h"
 #include "rosa_queue.h"
+#include "rosa_idle.h"
 
 /***********************************************************
  * Global variables
  ***********************************************************/
 extern tcb * TCBLIST;
 extern tcb * EXECTASK;
+
 
 queue* READYQUEUE;
 queue* WAITINGQUEUE;
@@ -63,18 +65,29 @@ extern void ROSA_yield(void);
 //Define the initial value of the satus register
 #define ROSA_INITIALSR 0x1c0000
 
+
 //Timer interrupt service routine
 __attribute__((__interrupt__)) extern void timerISR(void);
 
+typedef void *tcbHandle;
+
 //Initialize the kernel
 void ROSA_init(void);
-void ROSA_tcbCreate(tcb * tcbTask, char tcbName[NAMESIZE], void *tcbFunction, int * tcbStack, int tcbStackSize);
+
+int ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction, int * tcbStack, int tcbStackSize, int taskPriority, void *tcbArg, semHandle  *semaphores, int semaCount);
+int ROSA_tcbDelete(tcbHandle *task);
+int ROSA_tcbSuspend(tcbHandle *task);
+int ROSA_tcbResume(tcbHandle *task);
+
+int ROSA_prvcheckinList(tcb *list, tcb *task);
 
 int ROSA_Extended_Init(void);
 int ROSA_Extended_Start(void);
 
 //Install a new task TCB into ROSA
 extern void ROSA_tcbInstall(tcb *task);
+
+
 
 //Start running the ROSA kernel
 //This start running the created and installed tasks.

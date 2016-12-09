@@ -51,4 +51,13 @@ extern int timerPrescale;
 extern int timerRC;
 
 typedef uint32_t ticktime; //defines ticktime
+
+
+int ROSA_taskDelayUntil(ticktime start, ticktime t);
+
+
+int ROSA_prvclockTickCompare(void);
+
+ticktime ROSA_getTicks(void); //declaration
+
 #endif /* _ROSA_TIMER_H_ */
