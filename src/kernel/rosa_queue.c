@@ -99,8 +99,9 @@ int queue_push(queue *q, queue_item *new_item, int minimax)
 
 void queue_display(queue *q) {
 	int i;
-	for(i=0; i<q->count; ++i) {
+	for(i=0; i<q->count; i++) {
 		//printf("|%d|", q->heaparr[i].value);
+		usartWriteTcb(USART, q->heaparr[i].task_tcb);
 	}
 	//printf("\n");
 }
@@ -124,10 +125,10 @@ queue_item queue_delete_first_node(queue *q, int minimax)
 	removed = q->heaparr[0];
 	q->heaparr[0] = last;
 	if(minimax){
-		max_heapify(q->heaparr, 0, q->count);
+		max_heapify(q->heaparr, q->count, 0);
 	}
 	else{
-		min_heapify(q->heaparr, 0, q->count);
+		min_heapify(q->heaparr, q->count, 0);
 	}
 	return removed;
 }
@@ -135,6 +136,9 @@ queue_item queue_delete_first_node(queue *q, int minimax)
 //Returns NULL if the queue is empty
 queue_item* queue_getFirst(queue* q)
 {
+	//queue_item* item;
+	//item->task_tcb = NULL;
+	//item->value = 0;
 	if(q->count == 0) return NULL;
 	return q->heaparr;
 }
@@ -179,10 +183,10 @@ queue_item queue_remove(queue *q, tcb *task, int minimax)
 	removed = q->heaparr[position];
 	q->heaparr[position] = last;
 	if(minimax){
-		max_heapify(q->heaparr, position, q->count);
+		max_heapify(q->heaparr, q->count, position);
 	}
 	else{
-		min_heapify(q->heaparr, position, q->count);
+		min_heapify(q->heaparr, q->count, position);
 	}
 	
 	return removed;

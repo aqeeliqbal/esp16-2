@@ -25,6 +25,8 @@
 /* Tab size: 4 */
 
 #include "kernel/rosa_scheduler.h"
+#include "kernel/rosa_ker.h"
+
 
 /***********************************************************
  * scheduler
@@ -38,5 +40,14 @@ void scheduler(void)
 {
 	//Find the next task to execute
 	//EXECTASK = EXECTASK->nexttcb;
-	EXECTASK = ROSA_prvGetFirstFromReadyQueue();
+	
+	
+	tcb *firstTask = ROSA_prvGetFirstFromReadyQueue();
+	//if(firstTask == NULL){
+		////EXECTASK = &idle_tcb;
+		////ROSA_prvAddToReadyQueue(&idle_tcb);
+		////firstTask = ROSA_prvGetFirstFromReadyQueue();
+	//}
+	//else
+		EXECTASK = firstTask;
 }

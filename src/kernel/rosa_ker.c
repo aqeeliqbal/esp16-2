@@ -26,6 +26,7 @@
 
 //Kernel includes
 #include "kernel/rosa_def.h"
+//SABA
 #include "kernel/rosa_sem.h"
 #include "kernel/rosa_ext.h"
 #include "kernel/rosa_ker.h"
@@ -38,15 +39,18 @@
 #include "drivers/pot.h"
 #include "drivers/usart.h"
 
+#include "stdlib.h"
+
+
+
 /***********************************************************
  * TCBLIST
- *Suspend LIST
+ *
  * Comment:
  * 	Global variables that contain the list of TCB's that
  * 	have been installed into the kernel with ROSA_tcbInstall()
  **********************************************************/
 tcb * TCBLIST;
-tcb *SuspendList;
 
 /***********************************************************
  * EXECTASK
@@ -63,6 +67,7 @@ tcb * EXECTASK;
  * 	Initialize the ROSA system
  *
  **********************************************************/
+
 void ROSA_init(void)
 {
 	//Do initialization of I/O drivers
@@ -75,323 +80,223 @@ void ROSA_init(void)
 	//Start with empty TCBLIST and no EXECTASK.
 	TCBLIST = NULL;
 	EXECTASK = NULL;
-
-	//Initialize the timer to 1 ms period.
-	//...
-	
-	//...
 }
 
-/***********************************************************
- * ROSA_tcbCreate
- *
- * Comment:
- * 	Create & Install the TCB with correct values.
- *
- **********************************************************/
+// 0 - everything is ok
 int ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction, int * tcbStack, int tcbStackSize, int taskPriority, void *tcbArg, semHandle  *semaphores, int semaCount)
 {
 	int i;
+	
+	tcb * task = (tcb *) malloc(sizeof(tcb));
 
 	//Initialize the tcb with the correct values
 	for(i = 0; i < NAMESIZE; i++) {
 		//Copy the id/name
-		tcbTask->id[i] = tcbName[i];
+		task->id[i] = tcbName[i];
 	}
 
 	//Dont link this TCB anywhere yet.
-	tcbTask->nexttcb = NULL;
+	task->nexttcb = NULL;
 
 	//Set the task function start and return address.
-	tcbTask->staddr = tcbFunction;
-	tcbTask->retaddr = (int)tcbFunction;
+	task->staddr = tcbFunction;
+	task->retaddr = (int)tcbFunction;
 
 	//Set up the stack.
-	tcbTask->datasize = tcbStackSize;
-	tcbTask->dataarea = tcbStack + tcbStackSize;
-	tcbTask->saveusp = tcbTask->dataarea;
+	task->datasize = tcbStackSize;
+	task->dataarea = tcbStack + tcbStackSize;
+	task->saveusp = task->dataarea;
 
 	//Set the initial SR.
-	tcbTask->savesr = ROSA_INITIALSR;
+	task->savesr = ROSA_INITIALSR;
 
 	//Setting our custom values
-	tcbTask->originalpriority = taskPriority;
-	tcbTask->priority = taskPriority;
+	task->original_priority = taskPriority;
+	task->priority = taskPriority;
 
-	tcbTask->semaList = calloc(semaCount,sizeof(semHandle));
-	tcbTask->semaCount = semaCount;
+	task->semaList = calloc(semaCount,sizeof(semHandle));
+	task->semaCount = semaCount;
 	int result = 0;
-	for(int i =0; i<semaCount; i++)
-	{
-		result = ROSA_SemaphoreRegister(semaphores[i], tcbTask);
-		if(result > 0)
-		{
-			//tcbTask->semaphoreList[i] = semaphores[i]; // to figure out which Semaphore Task is using 
-			//result = ROSA_semaphoreTake(semHandle sTakeHandle);
-			//if (result>0)
-			return 4; //as in error
-		}
-	
-	}
 	
 	tcb * tcbTmp;
 
 	/* Is this the first tcb installed? */
 	if(TCBLIST == NULL) {
-		TCBLIST = tcbTask;
-		TCBLIST->nexttcb = tcbTask;			//Install the first tcb
-		tcbTask->nexttcb = TCBLIST;			//Make the list circular
+		TCBLIST = task;
+		TCBLIST->nexttcb = task;			//Install the first tcb
+		task->nexttcb = TCBLIST;			//Make the list circular
 	}
 	else {
 		tcbTmp = TCBLIST;					//Find last tcb in the list
 		while(tcbTmp->nexttcb != TCBLIST) {
 			tcbTmp = tcbTmp->nexttcb;
 		}
-		tcbTmp->nexttcb = tcbTask;			//Install tcb last in the list
-		tcbTask->nexttcb = TCBLIST;			//Make the list circular
+		tcbTmp->nexttcb = task;			//Install tcb last in the list
+		task->nexttcb = TCBLIST;			//Make the list circular
 	}
 	
-	//Initialize context.	contextInit(tcbTask);
+	*tcbTask = task;
+	
+	ROSA_prvAddToReadyQueue(task);
+	
+	//Initialize context.
+	contextInit(task);
+	return 0;
 }
 
-int ROSA_tcbDelete(tcbHandle *tcbTask, semHandle  *semaphores, int semaCount) 
+// 0 - everything is ok
+// 1 - the task isn't created
+// 2 - removing from ready queue failed
+// 3 - removing from waiting queue failed
+int ROSA_tcbDelete(tcbHandle *task)
 {
 	int errorMessage;
-	if ((checkinTCBLIST(tcb *task)==0)) // check if this task exists
+	tcb *tcbTask = (tcb*)*task;
+	if (ROSA_prvcheckinList(TCBLIST, tcbTask) != 1)
 	{
-		//Now we know that the task exists. Now we check if task is using semaphore
-
-		// functions that tells how many semaphores are registered to tasks.
-		//if( semaphore TAKEN BY TAske==0)  //function to be provided by Ali
-		//{
-		for(int i =0; i<semaCount: i++)
-		{
-			errorMessage = ROSA_SemaphoreUnregister(semaphores[i], tcbTask);
-			tcbTask->activeSemaphores = calloc(semaCount,sizeof(semHandle));
-			if(errorMessage == 0)
-			{
-				errorMessage = ROSA_semaphoreGive(semHandle sTakeHandle);
-				if(errorMessage == 0)
-				{
-					errorMessage = ROSA_prvRemoveFromReadyQueue(tcbTask);
-					if(errorMessage == 0)
-					{
-						errorMessage = ROSA_prvRemoveFromWaitingQueue(tcbTask);
-					}
-					else
-						return 4;
-				
-			}
-			else
-				return 4;//means error, you cannot suspend a task which doesnt exist.
-		}
-	}
-	tcb * tcbTmp;
-	tcb * tcbNextTask;
-
-		tcbTmp = TCBLIST;					
-		while(tcbTmp->nexttcb != tcbTask) {
-			tcbTmp = tcbTmp->nexttcb;
-		}
-		tcbTmp->nexttcb = tcbTask->nexttcb;			
-		tcbTask->nexttcb = NULL;	
-		tcbTask = NULL;		
-	}
-}
-
-// 0 = ok, 1 = not found in tcblit, 2 = found in ready or waiting queue, 3 = failed to remove from suspend
-int ROSA_tcbResume(void *tcbTask)
-{
-	int error = 0;
-		if ((ROSA_prvcheckinTCBLIST(tcbTask)==0)) // check if this task exists
-		{
-			//Now we know that the task exists. Now we check in queues.
-			if( (ROSA_prvCheckInReadyQueue(tcb *tcbTask)==0) && (ROSA_prvCheckInWaitingQueue(tcb *tcbTask) ==0) )
-			{
-				return 2;
-			}
-			else
-			{
-				errorMessage = ROSA_prvRemovefromSuspendQueue(tcbTask);
-				if(errorMessage == 0)
-				return 0;//operation successful
-				else
-				return errorMessage +3;
-			}
-
-		}
-		else
 		return 1;
-}
-
-int ROSA_tcbSuspend(void *tcbTask)
-{
-	int errorMessage;
-
-	if ((ROSA_prvcheckinTCBLIST(tcb *task)==0)) // check if this task exists
-	{
-		//Now we know that the task exists. Now we check in queues.
-		if( (ROSA_prvCheckInReadyQueue(tcb *task)==0) && (ROSA_prvCheckInWaitingQueue(tcb *task)==0) )
-		{
-			//now we know that the task is either in readyqueue or in waiting queue and the task exists.
-			//Now check what ROSA_prvRemoveFromWaitingQueue(tcbTask) returns and just put that value.
-			errorMessage = ROSA_prvRemoveFromReadyQueue(tcbTask);
-			if(errorMessage == 0) //assuming that there is no error, it returns 0
-			{
-				//successfully removed from readyqueue now removing from waitingqueue
-				errorMessage  = ROSA_prvAddtoSuspendQueue(tcbTask);
-				if(errorMessage == 0)  //assuming that there is no error, it returns 0
-				{
-					return 0;//operation successful
-				}
-				else
-				{
-					//means it failed to remove from waitingqueue
-					return errorMessage +3
-				}
-			}
-			else
-			{
-				//means it failed to remove from readyqueue
-				return errorMessage +2
-			}
-		}
-		else
-		{
-			//This means that the task is already in suspended mode or task doesnt exist.
-			return errorMessage +3; //means error, you cannot suspend a task which is not in any of the above list. Either it doesnt exist or is already in suspend state.
-		}
 	}
-	else
-	return errorMessage +4 ;//means error, you cannot suspend a task which doesnt exist.
+	errorMessage = ROSA_prvRemoveFromReadyQueue(tcbTask);
+	if(errorMessage != 0 && errorMessage != 2){
+		return 2;
+	}
+	errorMessage = ROSA_prvRemoveFromWaitingQueue(tcbTask);
+	if(errorMessage != 0 && errorMessage != 2){
+		return 3;
+	}
+	
+	
+	tcb * tcbTmp;
+
+	tcbTmp = TCBLIST;
+	while(tcbTmp->nexttcb != tcbTask) {
+		tcbTmp = tcbTmp->nexttcb;
+	}
+	tcbTmp->nexttcb = tcbTask->nexttcb;
+	tcbTask->nexttcb = NULL;
+	
+	free(tcbTask);
+	task = NULL;
 }
 
-
-
-int ROSA_prvcheckinTCBLIST(tcb *task)
-{	
-	//tcb * tcbTmp;
-	*tcbTmp = TCBLIST;					//Find last tcb in the list
-	 while(tcbTmp->nexttcb != TCBLIST) {
-		if(tcbTmp == tcbTask){
-			return 0;
+//2 - the list is empty
+//1 - task is in the list
+//0 - task is not in the list
+int ROSA_prvcheckinList(tcb *list, tcb *task)
+{
+	tcb * tcbTmp;
+	if(list == NULL){
+		return 2;
+	}
+	tcbTmp = list;					//Find last tcb in the list
+	while(tcbTmp->nexttcb != list) {
+		if(tcbTmp == task){
+			task = tcbTmp;
+			return 1;
 		}
 		tcbTmp = tcbTmp->nexttcb;
 	}
-	return 1;
+	return 0;
 }
 
-//make a dynamic array
-//0 everything is ok
-//1 null pointer
-//2 task not in the queue
-//3 removal failed
-int ROSA_prvRemovefromSuspendQueue(tcb *task)	
+// 0 - everything is ok
+// 1 - task is null pointer
+// 2 - task isn't created
+// 3 - task is already suspended
+// 4 - removing from ready queue failed
+// 5 - removing from waiting queue failed
+int ROSA_tcbSuspend(tcbHandle *task)
 {
-		tcbTask->nexttcb = NULL;
-		int errorMessage;
-		if(task == NULL)
-		{
-			return 1;
-		}
-		if errorMessage = (ROSA_prvCheckIfTaskExistInSuspendQueue(SuspendList, task))	
-		{ //task not found 
-			return 3; 
-		}
-		else
-		{
-			tcb * tcbTmp;
-			tcb * tcbTmp2;
-
-			/* Is this the first tcb installed? */
-			if(SuspendList == NULL) 
-			{
-				SuspendList = tcbTask;
-				SuspendList->nexttcb = tcbTask;			//Install the first tcb
-				tcbTask->nexttcb = SuspendList;			//Make the list circular
-			}
-			else 
-			{
-				tcbTmp = SuspendList;					//Find last tcb in the list
-				while(tcbTmp->nexttcb != task) {
-					tcbTmp = tcbTmp->nexttcb;
-			}
-			tcbTmp2 = tcbTmp->nexttcb; //temp varibale pointing to nextTCB
-			tcbTmp->nexttcb = tcbTmp2->nexttcb;			//un Install tcb last in the list
-			tcbTask->nexttcb = NULL;
-			tcbTmp2->nexttcb= tcbTmp->nexttcb; //Make the list circular
-			free(tcbTmp2);
-						
-		}
-		return 0; //removal successful
-	}
-}
-
-//make a dynamic array
-//0 everything is ok
-//1 null pointer
-//2 task not in the queue
-//3 removal failed
-
-int ROSA_prvAddtoSuspendQueue(tcb *task){
+	int errorMessage;
 	if(task == NULL){
 		return 1;
 	}
-	if(ROSA_prvCheckIfTaskExistInSuspendQueue(SuspendList, task)){
+	tcb *tcbTask = (tcb*)*task;
+	
+	if(ROSA_prvcheckinList(TCBLIST,tcbTask) != 1){
+		//it isn't created
 		return 2;
 	}
-	else
-	{		tcb * tcbTmp;
-
-		/* Is this the first tcb installed? */
-			if(SuspendList == NULL) {
-			SuspendList = tcbTask;
-			SuspendList->nexttcb = tcbTask;			//Install the first tcb
-			tcbTask->nexttcb = SuspendList;			//Make the list circular
-		}
-		else 
-		{
-			tcbTmp = SuspendList;					//Find last tcb in the list
-			while(tcbTmp->nexttcb != SuspendList) {
-			tcbTmp = tcbTmp->nexttcb;
-			}
-			tcbTmp->nexttcb = tcbTask;			//Install tcb last in the list
-			tcbTask->nexttcb = SuspendList;
-		}
-	return 0;
-	}
-}
-
-
-bool ROSA_prvCheckIfTaskExistInSuspendQueue(tcb *SuspendList, tcb *task)
-{
-	tcb *tempTcb = SuspendList;
-	while(tempTcb->nexttcb != SuspendList)
-	{
-		if(tempTcb-> nexttcb == task)
-			return true; //if task is found
-			else
-			tempTcb = tempTcb->nexttcb;
-	}
-		return false; //if task not found
-}
 	
+	if(ROSA_prvCheckInReadyQueue(tcbTask) == 0 && ROSA_prvCheckInWaitingQueue(tcbTask) == 0){
+		//it is already suspended
+		return 3;
+	}
+	
+	errorMessage = ROSA_prvRemoveFromReadyQueue(tcbTask);
+	if(errorMessage != 0 && errorMessage != 2){
+		return 4;
+	}
+	
+	errorMessage = ROSA_prvRemoveFromWaitingQueue(tcbTask);
+	if(errorMessage != 0 && errorMessage != 2){
+		return 5;
+	}
+	return 0;
+}
+
+// SABA
+// 0 - everything is ok
+// 1 - task is null pointer
+// 2 - task isn't created
+// 3 - task is not suspended
+// 4 - adding from ready queue failed
+int ROSA_tcbResume(tcbHandle *task)
+{
+	int errorMessage;
+	if(task == NULL){
+		return 1;
+	}
+	tcb *tcbTask = (tcb*)*task;
+	
+	if(ROSA_prvcheckinList(TCBLIST,tcbTask) != 1){
+		//it isn't created
+		return 2;
+	}
+	
+	if(ROSA_prvCheckInReadyQueue(tcbTask) == 1 || ROSA_prvCheckInWaitingQueue(tcbTask) == 1){
+		//it is not suspended
+		return 3;
+	}
+	
+	errorMessage = ROSA_prvAddToReadyQueue(tcbTask);
+	if(errorMessage != 0 && errorMessage != 2){
+		return 4;
+	}
+	return 0;
+}
+
+
+
 //0 everything is OK
 //1 READYQUEUE failed to initialize
 //2 WAITINGQUEUE failed to initialize
 int ROSA_Extended_Init(void){
+	READYQUEUE = (queue * ) malloc(sizeof(queue));
+	WAITINGQUEUE = (queue * ) malloc(sizeof(queue));
 	
 	if(queue_init(READYQUEUE)) return 1;
 	if(queue_init(WAITINGQUEUE)) return 2;
 	
-	timerInit(100);
-	timerPeriodSet(1);
 	interruptInit();
-	interruptEnable();
+	timerInit(1);
+	timerPeriodSet(1);
+	//interruptInit();
+	//interruptEnable();
 	ROSA_init();
+		void* args;
+		semHandle* semaphores;
+		int sem_number = 3;
+		
+		ROSA_tcbCreate(&idle_tcb, "idle", idle, idle_stack, IDLE_STACK_SIZE, 1, args, semaphores, sem_number);
+		//ROSA_tcbInstall(&idle_tcb);
+		
+			//ROSA_prvAddToReadyQueue(&idle_tcb);
 	//create idle task
 	return 0;
 }
+
+// 0 - everything is ok
 int ROSA_Extended_Start(void){
 	timerStart();
 	
@@ -400,8 +305,13 @@ int ROSA_Extended_Start(void){
 }
 
 tcb * ROSA_prvGetFirstFromReadyQueue(void){
-	tcb* firstTask = queue_getFirst(READYQUEUE)->task_tcb;
+	queue_item *item = queue_getFirst(READYQUEUE);
+	if(item == NULL){
+		return NULL;
+	}
+	tcb* firstTask = item->task_tcb;
 	//if firstTask == NULL, give the Idle task!
+	
 	return firstTask;
 }
 
@@ -420,8 +330,6 @@ int ROSA_prvAddToReadyQueue(tcb *task){
 	new_item.value = task->priority;
 	return queue_push(READYQUEUE, &new_item, 1);
 }
-	
-	
 
 //0 everything is ok
 //1 null pointer
@@ -458,12 +366,19 @@ int ROSA_prvUpdateReadyQueue(tcb *modifiedTask){
 }
 
 tcb * ROSA_prvGetFirstFromWaitingQueue(void){
-	tcb* firstTask = queue_getFirst(WAITINGQUEUE)->task_tcb;
-	//if firstTask == NULL, give the Idle task!
+	queue_item *item = queue_getFirst(WAITINGQUEUE);
+	if(item == NULL){
+		return NULL;
+	}
+	tcb* firstTask = item->task_tcb;
+		
 	return firstTask;
 }
 
 unsigned int ROSA_prvGetFirstWakeTime(void){
+	if( queue_getFirst(WAITINGQUEUE) == NULL){
+		return 0;
+	}
 	return queue_getFirst(WAITINGQUEUE)->value;
 }
 
