@@ -34,6 +34,9 @@
 #include "drivers/led.h"
 #include "drivers/delay.h"
 #include "drivers/usart.h"
+#include "kernel/rosa_sem.h"
+#include "kernel/rosa_prv.h"
+
 
 //Include configuration
 #include "rosa_config.h"

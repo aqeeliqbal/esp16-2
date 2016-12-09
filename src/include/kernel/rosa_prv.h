@@ -6,7 +6,7 @@
 #include "kernel/rosa_def.h"
 
 
-//typedef uint16_t semHandle;
+typedef uint16_t semHandle;
 
 /* Private function declarations */
 
