@@ -28,10 +28,15 @@
 #define rosa_def_H_
 
 #include "rosa_config.h"
-#include "kernel/rosa_sem.h"
+//#include "kernel/rosa_sem.h"
+//#include "kernel/rosa_prv.h"
 
 #ifndef NULL
 #define NULL 0
+
+typedef uint16_t semHandle;
+typedef void* tcbHandle;
+
 #endif
 
 /***********************************************************

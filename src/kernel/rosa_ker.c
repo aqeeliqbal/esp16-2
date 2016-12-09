@@ -28,6 +28,7 @@
 #include "kernel/rosa_def.h"
 //SABA
 #include "kernel/rosa_sem.h"
+#include "kernel/rosa_prv.h"
 #include "kernel/rosa_ext.h"
 #include "kernel/rosa_ker.h"
 #include "kernel/rosa_tim.h"

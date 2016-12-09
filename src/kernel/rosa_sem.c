@@ -1,5 +1,9 @@
+
+
 #include "kernel/rosa_sem.h"
+#include "kernel/rosa_prv.h"
 #include "kernel/rosa_ker.h"
+
 #include <stdlib.h>
 /*#include <stdio.h>*/
 
@@ -121,6 +125,16 @@ unsigned int ROSA_semaphoreGive(semHandle sGiveHandle) {
 
 /* Private function definitions */
 
+int ROSA_prvSemaphoreIsTakenByTask(semHandle s, tcb* task) {
+	semaphore* sem = ROSA_prvSemaphoreGet(s);
+	
+	if (sem->owner == task) {
+		return 1;
+	}
+	
+	return 0;
+}
+
 int ROSA_prvSemaphoreRegister(semHandle s, tcb* task) {
     semaphore* sem = ROSA_prvSemaphoreGet(s);
 	semaphore_reglist *temp = sem->reglist;
@@ -170,7 +184,7 @@ int ROSA_prvSemaphoreUnregister(semHandle s, tcb* task) {
 	{
 		ptr = temp1;
 		sem->reglist = temp1->next;
-		free(ptr);
+		free(ptr);		
 		return 0;
 	}
 

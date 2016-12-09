@@ -30,6 +30,8 @@
 #include "rosa_def.h"
 #include "rosa_queue.h"
 #include "rosa_idle.h"
+#include "kernel/rosa_sem.h"
+#include "kernel/rosa_prv.h"
 
 /***********************************************************
  * Global variables
@@ -69,7 +71,7 @@ extern void ROSA_yield(void);
 //Timer interrupt service routine
 __attribute__((__interrupt__)) extern void timerISR(void);
 
-typedef void *tcbHandle;
+//typedef void *tcbHandle;
 
 //Initialize the kernel
 void ROSA_init(void);
