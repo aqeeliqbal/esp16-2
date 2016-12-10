@@ -183,6 +183,17 @@ int ROSA_taskDelayUntil(ticktime start, ticktime t){
 //}
 
 
+/*******************************************
+
+Delay
+*******************************************/
+
+
+int ROSA_taskDelay(ticktime t){
+	ticktime wake = ROSA_getTicks();
+
+	ROSA_taskDelayUntil(wake, t);
+}
 
 
 /***********************************************************
