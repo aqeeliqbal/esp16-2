@@ -189,6 +189,9 @@
       <SubType>compile</SubType>
     </None>
     <Folder Include="src" />
+    <Compile Include="src\include\kernel\rosa_idle.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\include\kernel\rosa_prv.h">
       <SubType>compile</SubType>
     </Compile>

@@ -31,7 +31,6 @@
 #include "kernel/rosa_prv.h"
 #include "kernel/rosa_ext.h"
 #include "kernel/rosa_ker.h"
-#include "kernel/rosa_tim.h"
 #include "kernel/rosa_scheduler.h"
 
 //Driver includes

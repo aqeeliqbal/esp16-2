@@ -24,9 +24,10 @@
 *****************************************************************************/
 /* Tab size: 4 */
 
+
+#include <stdint.h>
 #ifndef rosa_def_H_
 #define rosa_def_H_
-
 #include "rosa_config.h"
 //#include "kernel/rosa_sem.h"
 //#include "kernel/rosa_prv.h"
