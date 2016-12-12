@@ -43,6 +43,14 @@ extern tcb * EXECTASK;
 queue* READYQUEUE;
 queue* WAITINGQUEUE;
 
+#define IDLE_TASK_PRIORITY 0
+#define MAX_TASK_NUMBER 256
+#define MAX_TASK_PRIORITY 256
+
+int rosa_initiated;
+int rosa_started;
+int task_number;
+
 
 /***********************************************************
  * Kernel low level context switch functions
@@ -76,7 +84,7 @@ __attribute__((__interrupt__)) extern void timerISR(void);
 //Initialize the kernel
 void ROSA_init(void);
 
-int ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction, int * tcbStack, int tcbStackSize, int taskPriority, void *tcbArg, semHandle  *semaphores, int semaCount);
+int ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction, int * tcbStack, int tcbStackSize, unsigned int taskPriority, void *tcbArg, semHandle  *semaphores, int semaCount);
 int ROSA_tcbDelete(tcbHandle *task);
 int ROSA_tcbSuspend(tcbHandle *task);
 int ROSA_tcbResume(tcbHandle *task);

@@ -62,12 +62,14 @@ void timerISR(void)
 	//This one is OK
 	//turnOn(LED3_GPIO);
 	
+	ROSA_prvclockTickCompare();
+	/*
 	// This WORKED
 	while(WAITINGQUEUE->count > 0 && WAITINGQUEUE->heaparr[0].value <= ticks){
 		//ledOn(LED3_GPIO);
 		ROSA_prvAddToReadyQueue(WAITINGQUEUE->heaparr[0].task_tcb);
 		ROSA_prvRemoveFromWaitingQueue(WAITINGQUEUE->heaparr[0].task_tcb);
-	}/*
+	}*/  /*
 	else{
 		ledOff(LED3_GPIO);
 	} */
@@ -99,20 +101,27 @@ clockTicksCompare
 
 int ROSA_prvclockTickCompare(void){  //put this in ISR or before scheduler
 
-	tcb *waitQp = NULL;
-	ticktime curr = ROSA_getTicks();
-	int err;		
+	//tcb *waitQp = NULL;
+	//ticktime curr = ROSA_getTicks();
+	//int err;		
 	interruptDisable();
 	//if (curr >= ROSA_prvGetFirstFromWaitingQueue->value){
-	while(curr >= ROSA_prvGetFirstWakeTime()){  //check if next has the same delay and so on
-
+	
+		while(WAITINGQUEUE->count > 0 && WAITINGQUEUE->heaparr[0].value <= ticks){
+			
+		ROSA_prvAddToReadyQueue(WAITINGQUEUE->heaparr[0].task_tcb);
+		ROSA_prvRemoveFromWaitingQueue(WAITINGQUEUE->heaparr[0].task_tcb);
+		}
+	
+	
+	/*while(curr >= ROSA_prvGetFirstWakeTime()){  //check if next has the same delay and so on
 		waitQp = ROSA_prvGetFirstFromWaitingQueue();
 		if (waitQp == NULL){
 			break;
 		}
 		err = ROSA_prvRemoveFromWaitingQueue(waitQp);
 		ROSA_prvAddToReadyQueue(waitQp);
-	}
+	}*/
 	//}
 	
 	interruptEnable();
@@ -183,6 +192,17 @@ int ROSA_taskDelayUntil(ticktime start, ticktime t){
 //}
 
 
+/*******************************************
+
+Delay
+*******************************************/
+
+
+int ROSA_taskDelay(ticktime t){
+	ticktime wake = ROSA_getTicks();
+
+	ROSA_taskDelayUntil(wake, t);
+}
 
 
 /***********************************************************

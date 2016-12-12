@@ -83,8 +83,22 @@ void ROSA_init(void)
 }
 
 // 0 - everything is ok
-int ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction, int * tcbStack, int tcbStackSize, int taskPriority, void *tcbArg, semHandle  *semaphores, int semaCount)
+// 1 - ROSA not initiated
+// 2 - MAX_TASK_NUMBER reached
+// 3 - invalid task priority
+int ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction, int * tcbStack, int tcbStackSize, unsigned int taskPriority, void *tcbArg, semHandle  *semaphores, int semaCount)
 {
+	//ERROR CHECKS
+	//if(rosa_initiated != 1){
+		//return 1;
+	//}
+	//if(task_number >= MAX_TASK_NUMBER){
+		//return 2;
+	//}
+	//if(taskPriority <= IDLE_TASK_PRIORITY || taskPriority > MAX_TASK_PRIORITY){
+		//return 3;
+	//}
+	
 	int i;
 	
 	tcb * task = (tcb *) malloc(sizeof(tcb));
@@ -116,6 +130,14 @@ int ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction
 
 	task->semaList = calloc(semaCount,sizeof(semHandle));
 	task->semaCount = semaCount;
+	
+	//if(semaphores != NULL){
+		//for (i=0; i<semaCount; i++) {
+			//task->semaList[i] = semaphores[i];
+			//ROSA_prvSemaphoreRegister(semaphores[i],task);
+		//}
+	//}
+	//
 	int result = 0;
 	
 	tcb * tcbTmp;
@@ -138,6 +160,7 @@ int ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction
 	*tcbTask = task;
 	
 	ROSA_prvAddToReadyQueue(task);
+	task_number++;
 	
 	//Initialize context.
 	contextInit(task);
@@ -177,6 +200,8 @@ int ROSA_tcbDelete(tcbHandle *task)
 	
 	free(tcbTask);
 	task = NULL;
+	task_number--;
+	return 0;
 }
 
 //2 - the list is empty
@@ -271,7 +296,14 @@ int ROSA_tcbResume(tcbHandle *task)
 //0 everything is OK
 //1 READYQUEUE failed to initialize
 //2 WAITINGQUEUE failed to initialize
+//3 ROSA already initiated
 int ROSA_Extended_Init(void){
+	//ERROR CHECK
+	//if(rosa_initiated == 1){
+		//return 3;
+	//}
+	rosa_initiated = 1;
+	task_number = 0;
 	READYQUEUE = (queue * ) malloc(sizeof(queue));
 	WAITINGQUEUE = (queue * ) malloc(sizeof(queue));
 	
@@ -283,21 +315,31 @@ int ROSA_Extended_Init(void){
 	timerPeriodSet(1);
 	//interruptInit();
 	//interruptEnable();
+	
 	ROSA_init();
-		void* args;
-		semHandle* semaphores;
-		int sem_number = 3;
-		
-		ROSA_tcbCreate(&idle_tcb, "idle", idle, idle_stack, IDLE_STACK_SIZE, 1, args, semaphores, sem_number);
-		//ROSA_tcbInstall(&idle_tcb);
-		
-			//ROSA_prvAddToReadyQueue(&idle_tcb);
-	//create idle task
+	
+	void* idle_args = NULL;
+	semHandle* semaphores = NULL;
+	int sem_number = 0;
+	
+	ROSA_tcbCreate(&idle_tcb, "idle", idle, idle_stack, IDLE_STACK_SIZE, IDLE_TASK_PRIORITY, idle_args, semaphores, sem_number);
+
 	return 0;
 }
 
 // 0 - everything is ok
+// 1 - ROSA not initiated
+// 2 - ROSA already started
 int ROSA_Extended_Start(void){
+	//ERROR CHECKS
+	//if(rosa_initiated != 1){
+		//return 1;
+	//}
+	//if(rosa_started == 1){
+		//return 2;
+	//}
+	rosa_started = 1;
+	
 	timerStart();
 	
 	ROSA_start();
