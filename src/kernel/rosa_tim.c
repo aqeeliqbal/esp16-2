@@ -63,15 +63,16 @@ void timerISR(void)
 	//turnOn(LED3_GPIO);
 	
 	ROSA_prvclockTickCompare();
+	/*
 	// This WORKED
-	//while(WAITINGQUEUE->count > 0 && WAITINGQUEUE->heaparr[0].value <= ticks){
+	while(WAITINGQUEUE->count > 0 && WAITINGQUEUE->heaparr[0].value <= ticks){
 		//ledOn(LED3_GPIO);
-		//ROSA_prvAddToReadyQueue(WAITINGQUEUE->heaparr[0].task_tcb);
-		//ROSA_prvRemoveFromWaitingQueue(WAITINGQUEUE->heaparr[0].task_tcb);
-	//}
-	//else{
-		//ledOff(LED3_GPIO);
-	//} 
+		ROSA_prvAddToReadyQueue(WAITINGQUEUE->heaparr[0].task_tcb);
+		ROSA_prvRemoveFromWaitingQueue(WAITINGQUEUE->heaparr[0].task_tcb);
+	}*/  /*
+	else{
+		ledOff(LED3_GPIO);
+	} */
 	
 	//Read the timer status register to determine if this is a valid interrupt
 	sr = tc->channel[0].sr;
@@ -149,11 +150,12 @@ DelayUntil
 //1 = over overflow limit
 
 
-int ROSA_taskDelayUntil(ticktime* start, ticktime t){
+int ROSA_taskDelayUntil(ticktime *start, ticktime t){
 	tcb *readyP = NULL;
 	ticktime maxClock = 4294967295;
-		*start = *start + t;
-		//ticktime rest = maxClock - start;
+		//ticktime sum = start + t;
+	*start = *start + t;	
+	//ticktime rest = maxClock - start;
 		int err;
 	/*	if (t > 3900000000){
 			return 1;
@@ -195,11 +197,15 @@ int ROSA_taskDelayUntil(ticktime* start, ticktime t){
 
 Delay
 *******************************************/
-
+//0 = fine
+//1 = negative value 
 
 int ROSA_taskDelay(ticktime t){
 	ticktime wake = ROSA_getTicks();
-
+if (t < 0){
+return 1; 
+}
+	else
 	ROSA_taskDelayUntil(&wake, t);
 }
 
