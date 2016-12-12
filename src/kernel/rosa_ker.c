@@ -416,8 +416,8 @@ tcb * ROSA_prvGetFirstFromWaitingQueue(void){
 }
 
 unsigned int ROSA_prvGetFirstWakeTime(void){
-	if( queue_getFirst(WAITINGQUEUE) == NULL){
-		return 0;
+	if( WAITINGQUEUE->count == 0){
+		return 3900000000;
 	}
 	return queue_getFirst(WAITINGQUEUE)->value;
 }
