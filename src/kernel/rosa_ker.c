@@ -131,13 +131,11 @@ int ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction
 	task->semaList = calloc(semaCount,sizeof(semHandle));
 	task->semaCount = semaCount;
 	
-	//if(semaphores != NULL){
-		//for (i=0; i<semaCount; i++) {
-			//task->semaList[i] = semaphores[i];
-			//ROSA_prvSemaphoreRegister(semaphores[i],task);
-		//}
-	//}
-	//
+	for (i=0; i<semaCount && semaphores != NULL; i++) {
+		task->semaList[i] = semaphores[i];
+		ROSA_prvSemaphoreRegister(semaphores[i],task);
+	}
+	
 	int result = 0;
 	
 	tcb * tcbTmp;

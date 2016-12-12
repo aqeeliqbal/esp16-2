@@ -4,13 +4,13 @@
 #include <stdint.h>
 #include "kernel/rosa_def.h"
 
-
-//typedef uint16_t semHandle;
-
 unsigned int ROSA_semaphoreCreate(semHandle *sem);
 unsigned int ROSA_semaphoreTake(semHandle sTakeHandle);
 unsigned int ROSA_semaphoreGive(semHandle sGiveHandle);
 
+/* Private functions */
 
+int ROSA_prvSemaphoreRegister(semHandle sem, tcb* task);
+int ROSA_prvSemaphoreUnregister(semHandle sem, tcb* task);
 
 #endif

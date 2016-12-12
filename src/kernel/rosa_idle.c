@@ -34,8 +34,8 @@ void idle(void){
 		
 		//usartWriteTcb(USART, ROSA_prvGetFirstFromWaitingQueue());
 		
-		usartWriteChar(USART, 'T');
-		queue_display(READYQUEUE);
+		//usartWriteChar(USART, 'T');
+		//queue_display(READYQUEUE);
 
 		
 		ROSA_yield();

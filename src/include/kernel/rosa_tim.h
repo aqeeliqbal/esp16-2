@@ -53,7 +53,7 @@ extern int timerRC;
 typedef uint32_t ticktime; //defines ticktime
 
 
-int ROSA_taskDelayUntil(ticktime start, ticktime t);
+int ROSA_taskDelayUntil(ticktime* start, ticktime t);
 
 int ROSA_taskDelay(ticktime t);
 

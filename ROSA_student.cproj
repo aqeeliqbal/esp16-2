@@ -45,10 +45,12 @@
         <InterfaceName>JTAG</InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.avrdragon</ToolType>
-      <ToolNumber>00A200019931</ToolNumber>
+      <ToolNumber>00A200020156</ToolNumber>
       <ToolName>AVR Dragon</ToolName>
     </com_atmel_avrdbg_tool_avrdragon>
     <preserveEEPROM>true</preserveEEPROM>
+    <avrtoolserialnumber>00A200020156</avrtoolserialnumber>
+    <avrdeviceexpectedsignature>0x0</avrdeviceexpectedsignature>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <ToolchainSettings>
@@ -159,6 +161,9 @@
   </PropertyGroup>
   <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />
   <ItemGroup>
+    <Compile Include="src\test.h">
+      <SubType>compile</SubType>
+    </Compile>
     <None Include="AUTHOR">
       <SubType>compile</SubType>
     </None>
@@ -189,6 +194,9 @@
       <SubType>compile</SubType>
     </None>
     <Folder Include="src" />
+    <Compile Include="src\semtest.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\include\kernel\rosa_idle.h">
       <SubType>compile</SubType>
     </Compile>

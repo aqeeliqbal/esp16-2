@@ -9,8 +9,8 @@
 
 /* Constants */
 
-#define SEMAPHORE_ACTIVE (1 << 0)
-#define SEMAPHORE_LOCKED (1 << 1)
+#define SEMAPHORE_ACTIVE 0x01
+#define SEMAPHORE_LOCKED 0x02
 
 /* Structs */
 
@@ -73,8 +73,6 @@ unsigned int ROSA_semaphoreCreate(semHandle *sem) {
         }
     }
 
-	
-
     return 2; /* There is no more room for semaphores */
 }
 
@@ -91,9 +89,18 @@ unsigned int ROSA_semaphoreTake(semHandle sTakeHandle) {
         return 2;
     }
 
+	/* DEBUG Delete these codes once semaphore registration works */
+
+	/*sem->owner = task;
+	ROSA_prvRaiseTaskPriority(task, sem->reglist->task->priority);
+	return 0;*/
+
+	/* END DEBUG */
+
     for (it=sem->reglist; it != NULL; it = it->next) {
         if (it->task == task) {
             sem->owner = task;
+			usartWriteChar(USART, '0'+sem->reglist->task->priority);
             ROSA_prvRaiseTaskPriority(task, sem->reglist->task->priority);
             return 0;
         }
@@ -184,7 +191,12 @@ int ROSA_prvSemaphoreUnregister(semHandle s, tcb* task) {
 	{
 		ptr = temp1;
 		sem->reglist = temp1->next;
-		free(ptr);		
+		free(ptr);
+		
+		if (sem->owner == task) {
+			sem->owner = NULL;
+		}
+		
 		return 0;
 	}
 
@@ -194,6 +206,11 @@ int ROSA_prvSemaphoreUnregister(semHandle s, tcb* task) {
 			ptr = temp1->next;
 			temp1->next = temp1->next->next;
 			free(ptr);
+
+			if (sem->owner == task) {
+				sem->owner = NULL;
+			}
+
 			return 0;
 		}
 
@@ -204,11 +221,14 @@ int ROSA_prvSemaphoreUnregister(semHandle s, tcb* task) {
 }
 
 semaphore* ROSA_prvSemaphoreGet(semHandle sem) {
-    if (semaphores[((sem%-1)/16)%16] == NULL) { /* Semaphore not yet created */
+	int i,j;
+	i= ((sem-1)/16)%16;
+    if (semaphores[((sem-1)/16)%16] == NULL) { /* Semaphore not yet created */
         return NULL;
     }
 
-    if (semaphores[((sem%-1)/16)%16][sem-1%16].flags & SEMAPHORE_ACTIVE) { /* The semaphore has not been initialised */
+	j = (sem-1)%16;
+    if (!(semaphores[((sem-1)/16)%16][(sem-1)%16].flags & SEMAPHORE_ACTIVE)) { /* The semaphore has not been initialised */
         return NULL;
     }
 

@@ -10,7 +10,5 @@ typedef uint16_t semHandle;
 
 /* Private function declarations */
 
-int ROSA_prvSemaphoreRegister(semHandle sem, tcb* task);
-int ROSA_prvSemaphoreUnregister(semHandle sem, tcb* task);
 
 #endif
