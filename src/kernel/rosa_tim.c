@@ -54,6 +54,10 @@ void timerISR(void)
 	int sr;
 	volatile avr32_tc_t * tc = &AVR32_TC;
 	ticks++;
+	if ( ticks >= 3900000000){
+	ticks = ticks - 3900000000;
+	}
+	
 	//if(ROSA_prvGetFirstFromReadyQueue() == NULL)
 		//ROSA_prvAddToReadyQueue(&idle_tcb);
 	
@@ -143,42 +147,72 @@ int ROSA_prvclockTickCompare(void){  //put this in ISR or before scheduler
 //}
 
 
+int ROSA_prvClockOverflow(ticktime *start){
+	
+	ticktime min;
+	if ( ROSA_prvGetFirstWakeTime() < *start){
+		min = ROSA_prvGetFirstWakeTime();
+	}
+	else{
+		min = *start;
+	}
+	ROSA_prvDecreasetWaitingQueueValues(min);
+	*start = *start - min;
+	ticks = ticks - min;
+	func(ticks);
+	
+	return 0;
+}
+
+
 /******************************************
 DelayUntil
 ******************************************/
 //0 = fine
-//1 = over overflow limit
+//1 = manipulation of getTick
+//2 = clock overflow 
+//3 = delay time is past by the clock
 
-
-int ROSA_taskDelayUntil(ticktime *start, ticktime t){
+int ROSA_taskDelayUntil(ticktime *start, ticktime t){             
 	tcb *readyP = NULL;
-	ticktime maxClock = 4294967295;
+	ticktime maxClock = 3900000000;
+	//ticktime now;
 		//ticktime sum = start + t;
-	*start = *start + t;	
-	//ticktime rest = maxClock - start;
+		
+		ticktime rest = maxClock - *start;
 		int err;
-	/*	if (t > 3900000000){
-			return 1;
+
+if ((*start > ROSA_getTicks()) || *start >= maxClock ){
+	return 1;
+}
+		if (t >= maxClock){
+			return 2;
 		}
-		else if (t > rest) && ( t< 4294967295){
-			ROSA_clockOverflow();
+		if (t + *start >= maxClock){
+			ledOn(LED4_GPIO);
+			ROSA_prvClockOverflow(start);
 		}
-		else if (t < rest) && ((start + t) < now=ROSA_getTicks()){
-			ROSA_prvAddToReadyQueue(&EXECTASK);
+		if ((*start + t) <= ROSA_getTicks()){
+			return 3;
 		}
-		else{*/
-		//interruptDisable();
+		*start = *start + t;
+		interruptDisable();
 		//void contextSave();
+		usartWriteChar(USART, 'U');
+		//start = sum;
 		readyP = ROSA_prvGetFirstFromReadyQueue();
 		err = ROSA_prvRemoveFromReadyQueue(readyP);
 		
 		//usartWriteChar(USART, err + '0');
 		ROSA_prvAddToWaitingQueue(readyP, *start);
 		//void contextRestore();
-		//interruptEnable();
+		interruptEnable();
+		
 		ROSA_yield();
-		return 0;
-		//}
+
+return 0;
+		
+
 }
 
 //int ROSA_taskDelayUntil(ticktime start, ticktime t){
