@@ -30,8 +30,8 @@
 #include "rosa_def.h"
 #include "rosa_queue.h"
 #include "rosa_idle.h"
-#include "kernel/rosa_sem.h"
-#include "kernel/rosa_prv.h"
+//#include "kernel/rosa_sem.h"
+//#include "kernel/rosa_prv.h"
 
 /***********************************************************
  * Global variables
