@@ -150,11 +150,12 @@ DelayUntil
 //1 = over overflow limit
 
 
-int ROSA_taskDelayUntil(ticktime start, ticktime t){
+int ROSA_taskDelayUntil(ticktime *start, ticktime t){
 	tcb *readyP = NULL;
 	ticktime maxClock = 4294967295;
-		ticktime sum = start + t;
-		ticktime rest = maxClock - start;
+		//ticktime sum = start + t;
+	*start = *start + t;	
+	//ticktime rest = maxClock - start;
 		int err;
 	/*	if (t > 3900000000){
 			return 1;
@@ -172,7 +173,7 @@ int ROSA_taskDelayUntil(ticktime start, ticktime t){
 		err = ROSA_prvRemoveFromReadyQueue(readyP);
 		
 		//usartWriteChar(USART, err + '0');
-		ROSA_prvAddToWaitingQueue(readyP, sum);
+		ROSA_prvAddToWaitingQueue(readyP, *start);
 		//void contextRestore();
 		//interruptEnable();
 		ROSA_yield();
@@ -196,12 +197,16 @@ int ROSA_taskDelayUntil(ticktime start, ticktime t){
 
 Delay
 *******************************************/
-
+//0 = fine
+//1 = negative value 
 
 int ROSA_taskDelay(ticktime t){
 	ticktime wake = ROSA_getTicks();
-
-	ROSA_taskDelayUntil(wake, t);
+if (t < 0){
+return 1; 
+}
+	else
+	ROSA_taskDelayUntil(&wake, t);
 }
 
 
