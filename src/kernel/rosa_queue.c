@@ -1,4 +1,5 @@
 #include "kernel/rosa_queue.h"
+#include "kernel/rosa_ker.h"
 #include "stdlib.h"
 
 //1 - error allocating memory
@@ -7,7 +8,7 @@ int queue_init(queue *q)
 {
 	q->count = 0;
 	q->initial_size = 16;
-	q->max_size = 256;
+	q->max_size = MAX_TASK_NUMBER;
 	q->size = q->initial_size;
 	//q->heaparr = (queue_item *) calloc(q->initial_size, sizeof(queue_item));
 	q->heaparr = (queue_item *) malloc(sizeof(queue_item) * q->initial_size);
