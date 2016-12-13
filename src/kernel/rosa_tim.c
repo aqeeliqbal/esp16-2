@@ -35,12 +35,6 @@
 
 ticktime ticks = 0;
 
-int turnOn(int led){
-	//ROSA_prvRemoveFromReadyQueue(&idle_tcb);
-	ledOn(led);
-	return 1;
-}
-
 /***********************************************************
  * timerInterruptHandler
  *
@@ -54,25 +48,11 @@ void timerISR(void)
 	int sr;
 	volatile avr32_tc_t * tc = &AVR32_TC;
 	ticks++;
-	//if(ROSA_prvGetFirstFromReadyQueue() == NULL)
-		//ROSA_prvAddToReadyQueue(&idle_tcb);
-	
-	//This one stops it from working if it is local, but works if it is global
-	//value = turnOn(LED3_GPIO);
-	//This one is OK
-	//turnOn(LED3_GPIO);
+	if ( ticks >= MAX_TICK_COUNT){
+		ticks = ticks - MAX_TICK_COUNT;
+	}
 	
 	ROSA_prvclockTickCompare();
-	/*
-	// This WORKED
-	while(WAITINGQUEUE->count > 0 && WAITINGQUEUE->heaparr[0].value <= ticks){
-		//ledOn(LED3_GPIO);
-		ROSA_prvAddToReadyQueue(WAITINGQUEUE->heaparr[0].task_tcb);
-		ROSA_prvRemoveFromWaitingQueue(WAITINGQUEUE->heaparr[0].task_tcb);
-	}*/  /*
-	else{
-		ledOff(LED3_GPIO);
-	} */
 	
 	//Read the timer status register to determine if this is a valid interrupt
 	sr = tc->channel[0].sr;
@@ -99,98 +79,83 @@ clockTicksCompare
 ******************************************/
 
 
-int ROSA_prvclockTickCompare(void){  //put this in ISR or before scheduler
-
-	//tcb *waitQp = NULL;
-	//ticktime curr = ROSA_getTicks();
-	//int err;		
-	interruptDisable();
-	//if (curr >= ROSA_prvGetFirstFromWaitingQueue->value){
+int ROSA_prvclockTickCompare(void){  //put this in ISR or before scheduler	
+	//interruptDisable();
 	
-		while(WAITINGQUEUE->count > 0 && WAITINGQUEUE->heaparr[0].value <= ticks){
-			
-		ROSA_prvAddToReadyQueue(WAITINGQUEUE->heaparr[0].task_tcb);
-		ROSA_prvRemoveFromWaitingQueue(WAITINGQUEUE->heaparr[0].task_tcb);
-		}
+	//while(WAITINGQUEUE->count > 0 && WAITINGQUEUE->heaparr[0].value <= ticks){
+	while(ROSA_prvGetFirstWakeTime() <= ticks){
+		ROSA_prvAddToReadyQueue(ROSA_prvGetFirstFromWaitingQueue());
+		//ROSA_prvAddToReadyQueue(WAITINGQUEUE->heaparr[0].task_tcb);
+		ROSA_prvRemoveFromWaitingQueue(ROSA_prvGetFirstFromWaitingQueue());
+		//ROSA_prvRemoveFromWaitingQueue(WAITINGQUEUE->heaparr[0].task_tcb);
+	}
 	
-	
-	/*while(curr >= ROSA_prvGetFirstWakeTime()){  //check if next has the same delay and so on
-		waitQp = ROSA_prvGetFirstFromWaitingQueue();
-		if (waitQp == NULL){
-			break;
-		}
-		err = ROSA_prvRemoveFromWaitingQueue(waitQp);
-		ROSA_prvAddToReadyQueue(waitQp);
-	}*/
-	//}
-	
-	interruptEnable();
+	//interruptEnable();
 	return 0;
 }
 
-//int ROSA_prvclockTickCompare(void){
-	//ticktime current_time = ROSA_getTicks();
-	//
-	//while(current_time >= ROSA_prvGetFirstWakeTime()){
-		//tcb * readyTask = ROSA_prvGetFirstFromWaitingQueue();
-		//if(readyTask == NULL){
-			//break;
-		//}
-		//ROSA_prvRemoveFromWaitingQueue(readyTask);
-		//ROSA_prvAddToReadyQueue(readyTask);
-	//}
-	//return 0;
-//}
+
+int ROSA_prvClockOverflow(ticktime *start){
+	
+	ticktime min;
+	if ( ROSA_prvGetFirstWakeTime() < *start){
+		min = ROSA_prvGetFirstWakeTime();
+	}
+	else{
+		min = *start;
+	}
+	ROSA_prvDecreasetWaitingQueueValues(min);
+	*start = *start - min;
+	ticks = ticks - min;
+	
+	return 0;
+}
 
 
 /******************************************
 DelayUntil
 ******************************************/
 //0 = fine
-//1 = over overflow limit
+//1 = manipulation of getTick
+//2 = clock overflow 
+//3 = delay time is past by the clock
 
-
-int ROSA_taskDelayUntil(ticktime *start, ticktime t){
+int ROSA_taskDelayUntil(ticktime *start, ticktime t){             
 	tcb *readyP = NULL;
-	ticktime maxClock = 4294967295;
-		//ticktime sum = start + t;
-	*start = *start + t;	
-	//ticktime rest = maxClock - start;
-		int err;
-	/*	if (t > 3900000000){
-			return 1;
-		}
-		else if (t > rest) && ( t< 4294967295){
-			ROSA_clockOverflow();
-		}
-		else if (t < rest) && ((start + t) < now=ROSA_getTicks()){
-			ROSA_prvAddToReadyQueue(&EXECTASK);
-		}
-		else{*/
-		//interruptDisable();
-		//void contextSave();
-		readyP = ROSA_prvGetFirstFromReadyQueue();
-		err = ROSA_prvRemoveFromReadyQueue(readyP);
+	ticktime maxClock = MAX_TICK_COUNT;
 		
-		//usartWriteChar(USART, err + '0');
-		ROSA_prvAddToWaitingQueue(readyP, *start);
-		//void contextRestore();
-		//interruptEnable();
-		ROSA_yield();
-		return 0;
-		//}
-}
+	ticktime rest = maxClock - *start;
+	int err;
 
-//int ROSA_taskDelayUntil(ticktime start, ticktime t){
-	//ticktime new_wake_time = start + t;
-	//
-	//tcb * readyTask = ROSA_prvGetFirstFromReadyQueue();
-	//ROSA_prvRemoveFromReadyQueue(readyTask);
-	//ROSA_prvAddToWaitingQueue(readyTask, new_wake_time);
-	//ROSA_yield();
-	//
-	//return 0;
-//}
+	if ((*start > ROSA_getTicks()) || *start >= maxClock ){
+		return 1;
+	}
+	if (t >= maxClock){
+		return 2;
+	}
+	if (t >= rest){
+		ROSA_prvClockOverflow(start);
+	}
+	if ((*start + t) <= ROSA_getTicks()){
+		return 3;
+	}
+	*start = *start + t;
+	//interruptDisable();
+	//void contextSave();
+	usartWriteChar(USART, 'U');
+	readyP = ROSA_prvGetFirstFromReadyQueue();
+	err = ROSA_prvRemoveFromReadyQueue(readyP);
+		
+	//usartWriteChar(USART, err + '0');
+	ROSA_prvAddToWaitingQueue(readyP, *start);
+	//void contextRestore();
+	//interruptEnable();
+		
+	ROSA_yield();
+
+	return 0;
+		
+}
 
 
 /*******************************************
@@ -198,15 +163,12 @@ int ROSA_taskDelayUntil(ticktime *start, ticktime t){
 Delay
 *******************************************/
 //0 = fine
-//1 = negative value 
+// the same error codes as taskDelayUntil
 
 int ROSA_taskDelay(ticktime t){
 	ticktime wake = ROSA_getTicks();
-if (t < 0){
-return 1; 
-}
-	else
-	ROSA_taskDelayUntil(&wake, t);
+
+	return ROSA_taskDelayUntil(&wake, t);
 }
 
 

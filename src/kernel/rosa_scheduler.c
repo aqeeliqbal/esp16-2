@@ -40,14 +40,6 @@ void scheduler(void)
 {
 	//Find the next task to execute
 	//EXECTASK = EXECTASK->nexttcb;
-	
-	
 	tcb *firstTask = ROSA_prvGetFirstFromReadyQueue();
-	//if(firstTask == NULL){
-		////EXECTASK = &idle_tcb;
-		////ROSA_prvAddToReadyQueue(&idle_tcb);
-		////firstTask = ROSA_prvGetFirstFromReadyQueue();
-	//}
-	//else
-		EXECTASK = firstTask;
+	EXECTASK = firstTask;
 }

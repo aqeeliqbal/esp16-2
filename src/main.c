@@ -227,7 +227,8 @@ void consumer(){
  ************************************************************/
 int main(void)
 {
-	semaphoreTest();
+	//semaphoreTest();
+	scheduler_init_test();
 	
 	while(1);
 	return 0;

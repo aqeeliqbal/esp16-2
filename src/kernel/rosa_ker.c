@@ -86,18 +86,27 @@ void ROSA_init(void)
 // 1 - ROSA not initiated
 // 2 - MAX_TASK_NUMBER reached
 // 3 - invalid task priority
+// 4 - idle task already created
 int ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction, int * tcbStack, int tcbStackSize, unsigned int taskPriority, void *tcbArg, semHandle  *semaphores, int semaCount)
 {
 	//ERROR CHECKS
-	//if(rosa_initiated != 1){
-		//return 1;
-	//}
-	//if(task_number >= MAX_TASK_NUMBER){
-		//return 2;
-	//}
-	//if(taskPriority <= IDLE_TASK_PRIORITY || taskPriority > MAX_TASK_PRIORITY){
-		//return 3;
-	//}
+	if(rosa_initiated != 1){
+		return 1;
+	}
+	if(task_number >= MAX_TASK_NUMBER){
+		return 2;
+	}
+	if(taskPriority < IDLE_TASK_PRIORITY || taskPriority > MAX_TASK_PRIORITY){
+		return 3;
+	}
+	
+	//Make sure only one idle task is created
+	if(idle_task_created != 1 && taskPriority == IDLE_TASK_PRIORITY){
+		idle_task_created = 1;
+	}
+	else if(idle_task_created == 1 && taskPriority == IDLE_TASK_PRIORITY){
+		return 4;
+	}
 	
 	int i;
 	
@@ -309,10 +318,11 @@ int ROSA_tcbResume(tcbHandle *task)
 //3 ROSA already initiated
 int ROSA_Extended_Init(void){
 	//ERROR CHECK
-	//if(rosa_initiated == 1){
-		//return 3;
-	//}
+	if(rosa_initiated == 1){
+		return 3;
+	}
 	rosa_initiated = 1;
+	idle_task_created = 0;
 	task_number = 0;
 	READYQUEUE = (queue * ) malloc(sizeof(queue));
 	WAITINGQUEUE = (queue * ) malloc(sizeof(queue));
@@ -332,9 +342,8 @@ int ROSA_Extended_Init(void){
 	semHandle* semaphores = NULL;
 	int sem_number = 0;
 	
-	ROSA_tcbCreate(&idle_tcb, "idle", idle, idle_stack, IDLE_STACK_SIZE, IDLE_TASK_PRIORITY, idle_args, semaphores, sem_number);
+	return ROSA_tcbCreate(&idle_tcb, "idle", idle, idle_stack, IDLE_STACK_SIZE, IDLE_TASK_PRIORITY, idle_args, semaphores, sem_number) + 3;
 
-	return 0;
 }
 
 // 0 - everything is ok
@@ -342,12 +351,12 @@ int ROSA_Extended_Init(void){
 // 2 - ROSA already started
 int ROSA_Extended_Start(void){
 	//ERROR CHECKS
-	//if(rosa_initiated != 1){
-		//return 1;
-	//}
-	//if(rosa_started == 1){
-		//return 2;
-	//}
+	if(rosa_initiated != 1){
+		return 1;
+	}
+	if(rosa_started == 1){
+		return 2;
+	}
 	rosa_started = 1;
 	
 	timerStart();
@@ -361,9 +370,7 @@ tcb * ROSA_prvGetFirstFromReadyQueue(void){
 	if(item == NULL){
 		return NULL;
 	}
-	tcb* firstTask = item->task_tcb;
-	//if firstTask == NULL, give the Idle task!
-	
+	tcb* firstTask = item->task_tcb;	
 	return firstTask;
 }
 
@@ -428,8 +435,8 @@ tcb * ROSA_prvGetFirstFromWaitingQueue(void){
 }
 
 unsigned int ROSA_prvGetFirstWakeTime(void){
-	if( queue_getFirst(WAITINGQUEUE) == NULL){
-		return 0;
+	if( WAITINGQUEUE->count == 0){
+		return MAX_TICK_COUNT;
 	}
 	return queue_getFirst(WAITINGQUEUE)->value;
 }
