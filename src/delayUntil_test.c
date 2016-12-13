@@ -14,17 +14,12 @@
 #include "drivers/led.h"
 #include "drivers/delay.h"
 #include "drivers/usart.h"
-//#include "kernel/rosa_sem.h"
-//#include "kernel/rosa_prv.h"
 #include "test.h"
-//#include "rosa_idle.h"
-
 
 //Include configuration
 #include "rosa_config.h"
 
 //Data blocks for the tasks
-//#define T1_STACK_SIZE 0x40
 #define T1_STACK_SIZE 0x100
 static int t1_stack[T1_STACK_SIZE];
 static tcb t1_tcb;
@@ -55,12 +50,9 @@ void taskToDelay(void)
 			delay_ms(1000);
 			ledOff(LED4_GPIO);
 			delay_ms(1000);
-			
 		}
 	}
 }
-
-
 void delayUnt_test(void)
 {
 
