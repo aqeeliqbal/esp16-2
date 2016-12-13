@@ -1,7 +1,7 @@
 /*
-* delayUntil_test.c
-*
-* Created: 2016-12-13 20:41:48
+* This test case will test if the user is aware of the time of execution after the ticktime parameter
+* for ROSA_taskDelayUntil is collected. If the execution takes too long and the delay is to short the delay time 
+* will be passed by the clock. If the error is not collected and a 0 is returned a red led will blink.
 */
 
 //Standard library includes
