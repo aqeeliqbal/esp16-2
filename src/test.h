@@ -13,6 +13,7 @@
 void semaphoreTest();
 int scheduler_init_test(void);
 void example(void);
+void delayUnt_test(void);
 
 
 #endif /* TEST_H_ */
