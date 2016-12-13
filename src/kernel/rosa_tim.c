@@ -117,7 +117,7 @@ DelayUntil
 ******************************************/
 //0 = fine
 //1 = manipulation of getTick
-//2 = clock overflow 
+//2 = invalid period set
 //3 = delay time is past by the clock
 
 int ROSA_taskDelayUntil(ticktime *start, ticktime t){             
@@ -163,12 +163,14 @@ int ROSA_taskDelayUntil(ticktime *start, ticktime t){
 Delay
 *******************************************/
 //0 = fine
-// the same error codes as taskDelayUntil
+//1 = invalid period set 
 
 int ROSA_taskDelay(ticktime t){
 	ticktime wake = ROSA_getTicks();
-
-	return ROSA_taskDelayUntil(&wake, t);
+	if(ROSA_taskDelayUntil(&wake, t)){
+		return 1;
+	}
+	return 0;
 }
 
 
