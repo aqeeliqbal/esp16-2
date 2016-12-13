@@ -100,7 +100,6 @@ unsigned int ROSA_semaphoreTake(semHandle sTakeHandle) {
     for (it=sem->reglist; it != NULL; it = it->next) {
         if (it->task == task) {
             sem->owner = task;
-			usartWriteChar(USART, '0'+sem->reglist->task->priority);
             ROSA_prvRaiseTaskPriority(task, sem->reglist->task->priority);
             return 0;
         }
@@ -182,6 +181,7 @@ int ROSA_prvSemaphoreUnregister(semHandle s, tcb* task) {
     semaphore* sem = ROSA_prvSemaphoreGet(s);
 	semaphore_reglist *temp1 = sem->reglist;
 	semaphore_reglist *ptr = NULL;
+	int counter=0;
 	
 	if (temp1 == NULL) {
 		return 1;
@@ -197,6 +197,13 @@ int ROSA_prvSemaphoreUnregister(semHandle s, tcb* task) {
 			sem->owner = NULL;
 		}
 		
+		
+		for (temp1=sem->reglist; temp1 != NULL; temp1 = temp1->next) {
+			counter++;
+		}
+
+	    usartWriteChar(USART, '0'+counter);
+		
 		return 0;
 	}
 
@@ -210,6 +217,12 @@ int ROSA_prvSemaphoreUnregister(semHandle s, tcb* task) {
 			if (sem->owner == task) {
 				sem->owner = NULL;
 			}
+			
+			for (temp1=sem->reglist; temp1 != NULL; temp1 = temp1->next) {
+				counter++;
+			}
+
+			usartWriteChar(USART, '0'+counter);
 
 			return 0;
 		}

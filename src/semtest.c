@@ -18,8 +18,12 @@ semHandle sem[3] = {0};
 #define MY_STACK_SIZE 0x100
 static int t1_stack[MY_STACK_SIZE];
 static int t2_stack[MY_STACK_SIZE];
+//static const char *texttest = "Task1 is running\n";
 
-void task1(void* params) {
+void task1(void* tcbArg) {
+	//char * taskname;
+	//taskname=(char*)tcbArg;
+	//usartWriteLine(USART, taskname);
 	ticktime ticks = ROSA_getTicks();
 	int i;
 	int tmp;
@@ -27,13 +31,12 @@ void task1(void* params) {
 	while (1) {
 		// Toggle LED1
 		for (i=0; i<300000; i++) {
-			//ledOff(LED0_GPIO);
+			ledOff(LED0_GPIO);
 			ledOn(LED0_GPIO);
 			if (i == 100000) {
 				tmp = ROSA_semaphoreTake(sem[1]);
-				usartWriteChar(USART, '0'+ROSA_prvGetFirstFromReadyQueue()->priority);
 				ledOn(LED4_GPIO);
-			} else if (i == 200000) {
+				} else if (i == 200000) {
 				ledOff(LED4_GPIO);
 				ROSA_semaphoreGive(sem[1]);
 			}
@@ -46,7 +49,7 @@ void task1(void* params) {
 	}
 }
 
-void task2(void* params) {
+void task2(void* tcbArg) {
 	ticktime ticks;
 	int i;
 
@@ -62,9 +65,9 @@ void task2(void* params) {
 			if (i == 100000) {
 				ROSA_semaphoreTake(sem[1]);
 				ledOn(LED6_GPIO);
-			} else if (i == 200000) {
+				} else if (i == 200000) {
 				ledOff(LED6_GPIO);
-				ROSA_semaphoreGive(sem[1]);				
+				ROSA_semaphoreGive(sem[1]);
 			}
 		}
 
@@ -87,6 +90,8 @@ void semaphoreTest() {
 	
 	ROSA_tcbCreate(&t1Handle,"task1",task1,t1_stack,MY_STACK_SIZE,1,NULL,sem,3);
 	ROSA_tcbCreate(&t2Handle,"task2",task2,t2_stack,MY_STACK_SIZE,2,NULL,&sem[1],2);
+	//Deletes task 1
+	ROSA_tcbDelete(&t2Handle);
 	
 	ROSA_Extended_Start();
 }

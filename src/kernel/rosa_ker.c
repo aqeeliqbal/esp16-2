@@ -127,6 +127,7 @@ int ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction
 	//Setting our custom values
 	task->original_priority = taskPriority;
 	task->priority = taskPriority;
+	task->tcbArg = tcbArg;	
 
 	task->semaList = calloc(semaCount,sizeof(semHandle));
 	task->semaCount = semaCount;
@@ -167,23 +168,32 @@ int ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction
 
 // 0 - everything is ok
 // 1 - the task isn't created
-// 2 - removing from ready queue failed
-// 3 - removing from waiting queue failed
+// 2 - semaphore unregistration field 
+// 3 - removing from ready queue failed
+// 4 - removing from waiting queue failed
 int ROSA_tcbDelete(tcbHandle *task)
 {
-	int errorMessage;
+	int errorMessage,i;
 	tcb *tcbTask = (tcb*)*task;
 	if (ROSA_prvcheckinList(TCBLIST, tcbTask) != 1)
 	{
 		return 1;
 	}
+	for ( i=0; i<tcbTask->semaCount; i++) {
+		int error = ROSA_prvSemaphoreUnregister(tcbTask->semaList[i],tcbTask);
+		if (error != 0)
+		{
+			return 2;
+		}
+		
+	}
 	errorMessage = ROSA_prvRemoveFromReadyQueue(tcbTask);
 	if(errorMessage != 0 && errorMessage != 2){
-		return 2;
+		return 3;
 	}
 	errorMessage = ROSA_prvRemoveFromWaitingQueue(tcbTask);
 	if(errorMessage != 0 && errorMessage != 2){
-		return 3;
+		return 4;
 	}
 	
 	
@@ -212,13 +222,15 @@ int ROSA_prvcheckinList(tcb *list, tcb *task)
 		return 2;
 	}
 	tcbTmp = list;					//Find last tcb in the list
-	while(tcbTmp->nexttcb != list) {
+
+	do {
 		if(tcbTmp == task){
 			task = tcbTmp;
 			return 1;
 		}
-		tcbTmp = tcbTmp->nexttcb;
-	}
+		tcbTmp = tcbTmp->nexttcb;		
+	} while(tcbTmp != list);
+
 	return 0;
 }
 
