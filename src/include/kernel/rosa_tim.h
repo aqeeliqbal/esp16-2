@@ -51,6 +51,8 @@ extern int timerPrescale;
 extern int timerRC;
 
 typedef uint32_t ticktime; //defines ticktime
+#define MAX_TICK_COUNT 3900000000
+
 
 
 int ROSA_taskDelayUntil(ticktime *start, ticktime t);

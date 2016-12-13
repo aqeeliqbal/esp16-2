@@ -50,6 +50,7 @@ queue* WAITINGQUEUE;
 int rosa_initiated;
 int rosa_started;
 int task_number;
+int idle_task_created;
 
 
 /***********************************************************
