@@ -1,0 +1,46 @@
+ /*
+ * semtest.c
+ *This test checks too many tasks and designed to produce no output but crash the system.
+ * Created: 12/12/2016 9:21:31 AM
+ *  Author: saba
+ */ 
+
+#include "kernel/rosa_ker.h"
+#include "kernel/rosa_scheduler.h"
+#include "kernel/rosa_sem.h"
+
+#include "drivers/led.h"
+#include <avr32/io.h>
+#include "rosa_config.h"
+
+
+
+#define MY_STACK_SIZE 0x100
+static int t1_stack[MY_STACK_SIZE];
+
+
+void task1(void* tcbArg) {
+
+	ticktime ticks = ROSA_getTicks();
+	
+
+	while (1) {
+		// do nothing
+			}
+		
+}
+
+
+void RecurrentTaskTest() {
+	tcbHandle t1Handle;
+	
+	
+	ROSA_Extended_Init();
+	
+	for(int i=1; i<255; i++) //unlimited loop
+	{
+		ROSA_tcbCreate(&t1Handle,"task1",task1,t1_stack,MY_STACK_SIZE,1,NULL,NULL,NULL);
+	}
+
+	ROSA_Extended_Start();
+}
