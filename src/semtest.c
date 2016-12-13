@@ -88,10 +88,10 @@ void semaphoreTest() {
 	ROSA_semaphoreCreate(&sem[1]);
 	ROSA_semaphoreCreate(&sem[2]);
 	
-	ROSA_tcbCreate(&t1Handle,"task1",task1,t1_stack,MY_STACK_SIZE,1,NULL,sem,3);
-	ROSA_tcbCreate(&t2Handle,"task2",task2,t2_stack,MY_STACK_SIZE,2,NULL,&sem[1],2);
+	ROSA_tcbCreate(&t1Handle,"task1",task1,t1_stack,MY_STACK_SIZE,2,NULL,sem,3);
+	ROSA_tcbCreate(&t2Handle,"task2",task2,t2_stack,MY_STACK_SIZE,3,NULL,&sem[1],2);
 	//Deletes task 1
-	ROSA_tcbDelete(&t2Handle);
+	//ROSA_tcbDelete(&t2Handle);
 	
 	ROSA_Extended_Start();
 }

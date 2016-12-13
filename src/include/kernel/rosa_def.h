@@ -64,6 +64,7 @@ typedef struct tcb_record_t {
 	unsigned int original_priority;
 	semHandle* semaList;
 	int semaCount;
+	void* tcbArg;
 } tcb;
 
 #endif /* rosa_def_H_ */
