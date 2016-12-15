@@ -87,6 +87,8 @@ void ROSA_init(void)
 // 2 - MAX_TASK_NUMBER reached
 // 3 - invalid task priority
 // 4 - idle task already created
+// 5 - stack is a null pointer
+// 6 - stack size is 0
 int ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction, int * tcbStack, int tcbStackSize, unsigned int taskPriority, void *tcbArg, semHandle  *semaphores, int semaCount)
 {
 	//ERROR CHECKS
@@ -106,6 +108,13 @@ int ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction
 	}
 	else if(idle_task_created == 1 && taskPriority == IDLE_TASK_PRIORITY){
 		return 4;
+	}
+	
+	if(tcbTask == NULL){
+		return 5;
+	}
+	if(tcbStackSize == 0){
+		return 6;
 	}
 	
 	int i;
@@ -194,7 +203,6 @@ int ROSA_tcbDelete(tcbHandle *task)
 		{
 			return 2;
 		}
-		
 	}
 	errorMessage = ROSA_prvRemoveFromReadyQueue(tcbTask);
 	if(errorMessage != 0 && errorMessage != 2){
@@ -261,10 +269,19 @@ int ROSA_tcbSuspend(tcbHandle *task)
 		//it isn't created
 		return 2;
 	}
+
 	
 	if(ROSA_prvCheckInReadyQueue(tcbTask) == 0 && ROSA_prvCheckInWaitingQueue(tcbTask) == 0){
 		//it is already suspended
 		return 3;
+	}
+	
+		
+	int i;
+	for(i = 0; i < tcbTask->semaCount; i++){
+		if(ROSA_prvSemaphoreIsTakenByTask(tcbTask->semaList[i],tcbTask)){
+			ROSA_prvForceGiveSemaphore(tcbTask->semaList[i],tcbTask);
+		}
 	}
 	
 	errorMessage = ROSA_prvRemoveFromReadyQueue(tcbTask);

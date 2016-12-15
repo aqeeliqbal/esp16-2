@@ -247,3 +247,13 @@ semaphore* ROSA_prvSemaphoreGet(semHandle sem) {
 
     return &semaphores[(sem-1)/16][(sem-1)%16];
 }
+
+int ROSA_prvForceGiveSemaphore(semHandle s, tcb* task){
+	semaphore* sem = ROSA_prvSemaphoreGet(s);
+	
+	sem->owner = NULL;
+	ROSA_prvResetTaskPriority(task);
+	
+	return 0;
+	
+}

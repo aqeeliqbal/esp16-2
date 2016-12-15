@@ -10,8 +10,6 @@
 
 int state = 0;
 void idle(void){
-	
 	while(1){
-
 	}
 }
