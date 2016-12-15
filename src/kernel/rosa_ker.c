@@ -87,8 +87,8 @@ void ROSA_init(void)
 // 2 - MAX_TASK_NUMBER reached
 // 3 - invalid task priority
 // 4 - idle task already created
-// 5 - stack is a null pointer
-// 6 - stack size is 0
+// 5 - tcbFunction is a null pointer
+// 6 - stack or stack size is invalid
 int ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction, int * tcbStack, int tcbStackSize, unsigned int taskPriority, void *tcbArg, semHandle  *semaphores, int semaCount)
 {
 	//ERROR CHECKS
@@ -110,10 +110,10 @@ int ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction
 		return 4;
 	}
 	
-	if(tcbTask == NULL){
+	if(tcbFunction == NULL){
 		return 5;
 	}
-	if(tcbStackSize == 0){
+	if(tcbTask == NULL || tcbStackSize == 0){
 		return 6;
 	}
 	

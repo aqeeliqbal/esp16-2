@@ -100,7 +100,7 @@ unsigned int ROSA_semaphoreTake(semHandle sTakeHandle) {
     for (it=sem->reglist; it != NULL; it = it->next) {
         if (it->task == task) {
             sem->owner = task;
-            ROSA_prvRaiseTaskPriority(task, sem->reglist->task->priority);
+            ROSA_prvRaiseTaskPriority(task, sem->reglist->task->original_priority);
             return 0;
         }
     }
@@ -157,15 +157,22 @@ int ROSA_prvSemaphoreRegister(semHandle s, tcb* task) {
 	ptr->task = task;
 	//ptr->next = NULL;
 
-	if (temp == NULL || ptr->task->priority > temp->task->priority)
-	{					//Executes when linked list is empty 
+	if (temp == NULL || ptr->task->original_priority > temp->task->original_priority)
+	{					//Executes when linked list is empty
 		ptr->next = sem->reglist;
 		sem->reglist = ptr;
+		
+		if (sem->owner != NULL) {
+			//ROSA_prvRaiseTaskPriority(sem->owner, sem->reglist->task->original_priority);
+			sem->owner->priority = ptr->task->priority;
+		}
+
+		
 		return 0;
 	}
 
 	while (temp->next != NULL) {
-		if (ptr->task->priority > temp->next->task->priority) {
+		if (ptr->task->original_priority > temp->next->task->original_priority) {
 			ptr->next = temp->next;
 			temp->next = ptr;
 			return 0;
