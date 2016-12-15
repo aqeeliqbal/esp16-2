@@ -57,6 +57,7 @@
 int main(void)
 {
 	semaphoreTest();
+	//testcase2_3();
 	
 	while(1);
 	return 0;

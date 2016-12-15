@@ -23,9 +23,9 @@ void task(void){
 		
 		if(init_error != 0 && start_error != 0){
 			ledOn(LED0_GPIO);
-			delay_ms(1000);
+			//delay_ms(1000);
 			ledOff(LED0_GPIO);
-			delay_ms(1000);
+			//delay_ms(1000);
 		}
 	}
 }
