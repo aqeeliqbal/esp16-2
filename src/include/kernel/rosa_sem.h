@@ -14,5 +14,7 @@ int ROSA_prvSemaphoreRegister(semHandle sem, tcb* task);
 int ROSA_prvSemaphoreUnregister(semHandle sem, tcb* task);
 
 int ROSA_prvForceGiveSemaphore(semHandle s, tcb* task);
+int ROSA_prvSemaphoreIsTakenByTask(semHandle s, tcb* task);
+int ROSA_prvSemCheckInReglist(semHandle s, tcb* task);
 
 #endif
