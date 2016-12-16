@@ -358,8 +358,9 @@ int ROSA_Extended_Init(void){
 	void* idle_args = NULL;
 	semHandle* semaphores = NULL;
 	int sem_number = 0;
+	ROSA_tcbCreate(&idle_tcb, "idle", idle, idle_stack, IDLE_STACK_SIZE, IDLE_TASK_PRIORITY, idle_args, semaphores, sem_number);
 	
-	return ROSA_tcbCreate(&idle_tcb, "idle", idle, idle_stack, IDLE_STACK_SIZE, IDLE_TASK_PRIORITY, idle_args, semaphores, sem_number) + 3;
+	return 0;
 
 }
 
@@ -404,7 +405,22 @@ int ROSA_prvAddToReadyQueue(tcb *task){
 	queue_item new_item;
 	new_item.task_tcb = task;
 	new_item.value = task->priority;
-	return queue_push(READYQUEUE, &new_item, 1);
+	int error =  queue_push(READYQUEUE, &new_item, 1);
+	
+	//int new_position = queue_getPosition(READYQUEUE, task);
+	//if(new_position != 0 && ROSA_prvGetFirstFromReadyQueue()->priority == task->priority){
+		//int i;
+		//for(i = 0; i < task->semaCount; i++){
+			//if(ROSA_prvSemaphoreIsTakenByTask(task->semaList[i], task)){
+				//if(ROSA_prvSemCheckInReglist(task->semaList[i], ROSA_prvGetFirstFromReadyQueue()) == 1){
+					//tcb* task =  ROSA_prvGetFirstFromReadyQueue();
+					//ROSA_prvRemoveFromReadyQueue(task);
+					//ROSA_prvAddToReadyQueue(task);
+				//}
+			//}
+		//}
+	//}
+	return error;
 }
 
 //0 everything is ok

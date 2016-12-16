@@ -264,3 +264,15 @@ int ROSA_prvForceGiveSemaphore(semHandle s, tcb* task){
 	return 0;
 	
 }
+
+int ROSA_prvSemCheckInReglist(semHandle s, tcb* task){
+	semaphore* sem = ROSA_prvSemaphoreGet(s);
+	semaphore_reglist *temp = sem->reglist;
+	while (temp->next != NULL) {
+		if (task == temp->next->task) {
+			return 1;
+		}
+		temp = temp->next;
+	}
+	return 0;
+}
