@@ -56,8 +56,11 @@
 
 int main(void)
 {
-	semaphoreTest();
-	//testcase2_3();
+	//semaphoreTest();
+	semaphoreTest2();
+	//scheduler_init_test();
+	//testcase1_m();
+	//main_m2();
 	
 	while(1);
 	return 0;
