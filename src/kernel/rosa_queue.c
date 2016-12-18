@@ -51,10 +51,10 @@ void min_heapify(queue_item *data, int count, int loc) {
 	int right = left + 1;
 	int smallest = loc;
 	
-	if (left < count && data[left].value > data[smallest].value) {
+	if (left < count && data[left].value < data[smallest].value) {
 		smallest = left;
 	}
-	if (right < count && data[right].value > data[smallest].value) {
+	if (right < count && data[right].value < data[smallest].value) {
 		smallest = right;
 	}
 
