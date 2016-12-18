@@ -62,6 +62,7 @@ typedef struct tcb_record_t {
 	int savereg[15];		//The CPU registers
 	unsigned int priority;
 	unsigned int original_priority;
+	unsigned int semaphore_ceiling;
 	semHandle* semaList;
 	int semaCount;
 	void* tcbArg;

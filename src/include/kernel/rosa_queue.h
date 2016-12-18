@@ -6,6 +6,7 @@
 typedef struct queue_item_t {
 	tcb * task_tcb; //Pointer to the task
 	unsigned int value;			    //The value, either the priority or the wake time of the task
+	unsigned int added_value;
 } queue_item;
 
 typedef struct queue_heap {
