@@ -140,13 +140,13 @@ int ROSA_taskDelayUntil(ticktime *start, ticktime t){
 		return 3;
 	}
 	*start = *start + t;
-	//interruptDisable();
+	interruptDisable();
 	readyP = ROSA_prvGetFirstFromReadyQueue();
 	err = ROSA_prvRemoveFromReadyQueue(readyP);
 		
 	//usartWriteChar(USART, err + '0');
 	ROSA_prvAddToWaitingQueue(readyP, *start);
-	//interruptEnable();
+	interruptEnable();
 		
 	ROSA_yield();
 

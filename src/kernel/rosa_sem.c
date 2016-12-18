@@ -100,7 +100,9 @@ unsigned int ROSA_semaphoreTake(semHandle sTakeHandle) {
     for (it=sem->reglist; it != NULL; it = it->next) {
         if (it->task == task) {
             sem->owner = task;
-            ROSA_prvRaiseTaskPriority(task, sem->reglist->task->original_priority);
+			interruptDisable();
+			ROSA_prvRaiseTaskPriority(task, sem->reglist->task->original_priority);
+			interruptEnable();
             return 0;
         }
     }
@@ -122,9 +124,14 @@ unsigned int ROSA_semaphoreGive(semHandle sGiveHandle) {
     if (sem->owner != ROSA_prvGetFirstFromReadyQueue()) {
         return 3;
     }
-
-    ROSA_prvResetTaskPriority(sem->owner);
-    sem->owner = NULL;
+	interruptDisable();
+	tcb* owner = sem->owner;
+	sem->owner = NULL;
+    ROSA_prvResetTaskPriority(owner);
+	interruptEnable();
+	
+	//Not sure if it should yield here
+	//ROSA_yield();
 
     return 0;
 }
@@ -253,6 +260,10 @@ semaphore* ROSA_prvSemaphoreGet(semHandle sem) {
     }
 
     return &semaphores[(sem-1)/16][(sem-1)%16];
+}
+
+unsigned int ROSA_prvGetSemaphoreCeiling(semHandle s){
+	return ROSA_prvSemaphoreGet(s)->reglist->task->original_priority;
 }
 
 int ROSA_prvForceGiveSemaphore(semHandle s, tcb* task){

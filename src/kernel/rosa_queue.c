@@ -23,13 +23,20 @@ void max_heapify(queue_item *data, int count, int loc) {
 	int right = left + 1;
 	int largest = loc;
 	
-	if (left <= count && data[left].value > data[largest].value) {
+	if (left < count && data[left].value > data[largest].value) {
 		largest = left;
 	}
-	if (right <= count && data[right].value > data[largest].value) {
+	else if (left < count && data[left].value == data[largest].value && data[left].added_value > data[largest].added_value){
+		largest = left;
+	}
+	
+	if (right < count && data[right].value > data[largest].value) {
 		largest = right;
 	}
-
+	else if (right < count && data[right].value == data[largest].value && data[right].added_value > data[largest].added_value){
+		largest = right;
+	}
+	
 	queue_item temp;
 	if(largest != loc) {
 		temp = data[loc];
@@ -44,10 +51,10 @@ void min_heapify(queue_item *data, int count, int loc) {
 	int right = left + 1;
 	int smallest = loc;
 	
-	if (left <= count && data[left].value > data[smallest].value) {
+	if (left < count && data[left].value > data[smallest].value) {
 		smallest = left;
 	}
-	if (right <= count && data[right].value > data[smallest].value) {
+	if (right < count && data[right].value > data[smallest].value) {
 		smallest = right;
 	}
 
@@ -87,7 +94,8 @@ int queue_push(queue *q, queue_item *new_item, int minimax)
 	{
 		parent = (index - 1) / 2;
 		if(minimax){
-			if (q->heaparr[parent].value >= new_item->value) break;
+			if (q->heaparr[parent].value > new_item->value) break;
+			if (q->heaparr[parent].value == new_item->value && q->heaparr[parent].added_value >= new_item->added_value) break;
 		}
 		else{
 			if (q->heaparr[parent].value <= new_item->value) break;
@@ -103,6 +111,7 @@ void queue_display(queue *q) {
 	for(i=0; i<q->count; i++) {
 		//printf("|%d|", q->heaparr[i].value);
 		usartWriteTcb(USART, q->heaparr[i].task_tcb);
+		usartWriteChar(USART, '0' + q->heaparr[i].task_tcb->priority);
 	}
 	//printf("\n");
 }
@@ -171,6 +180,7 @@ queue_item queue_remove(queue *q, tcb *task, int minimax)
 {
 	queue_item removed;
 	removed.task_tcb = NULL;
+	int position = queue_getPosition(q, task);
 	queue_item last = q->heaparr[--q->count];
 
 
@@ -180,7 +190,7 @@ queue_item queue_remove(queue *q, tcb *task, int minimax)
 		q->heaparr = realloc(q->heaparr, sizeof(queue_item) * q->size);
 		if (!q->heaparr) return removed; // Exit if the memory allocation fails
 	}
-	int position = queue_getPosition(q, task);
+	
 	removed = q->heaparr[position];
 	q->heaparr[position] = last;
 	if(minimax){

@@ -145,6 +145,7 @@ int ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction
 	//Setting our custom values
 	task->original_priority = taskPriority;
 	task->priority = taskPriority;
+	task->semaphore_ceiling = 0;
 	task->tcbArg = tcbArg;	
 
 	task->semaList = calloc(semaCount,sizeof(semHandle));
@@ -175,12 +176,16 @@ int ROSA_tcbCreate(tcbHandle *tcbTask, char tcbName[NAMESIZE], void *tcbFunction
 	}
 	
 	*tcbTask = task;
-	
+	interruptDisable();
 	ROSA_prvAddToReadyQueue(task);
+	interruptEnable();
 	task_number++;
 	
 	//Initialize context.
 	contextInit(task);
+	if(rosa_started == 1){
+		ROSA_yield();
+	}
 	return 0;
 }
 
@@ -405,22 +410,8 @@ int ROSA_prvAddToReadyQueue(tcb *task){
 	queue_item new_item;
 	new_item.task_tcb = task;
 	new_item.value = task->priority;
-	int error =  queue_push(READYQUEUE, &new_item, 1);
-	
-	//int new_position = queue_getPosition(READYQUEUE, task);
-	//if(new_position != 0 && ROSA_prvGetFirstFromReadyQueue()->priority == task->priority){
-		//int i;
-		//for(i = 0; i < task->semaCount; i++){
-			//if(ROSA_prvSemaphoreIsTakenByTask(task->semaList[i], task)){
-				//if(ROSA_prvSemCheckInReglist(task->semaList[i], ROSA_prvGetFirstFromReadyQueue()) == 1){
-					//tcb* task =  ROSA_prvGetFirstFromReadyQueue();
-					//ROSA_prvRemoveFromReadyQueue(task);
-					//ROSA_prvAddToReadyQueue(task);
-				//}
-			//}
-		//}
-	//}
-	return error;
+	new_item.added_value = task->semaphore_ceiling;
+	return queue_push(READYQUEUE, &new_item, 1);
 }
 
 //0 everything is ok
@@ -433,6 +424,9 @@ int ROSA_prvRemoveFromReadyQueue(tcb *task){
 	}
 	if(queue_getPosition(READYQUEUE, task) == -1){
 		return 2;
+	}
+	if(task->priority == 0){
+		return 4;
 	}
 	if(queue_remove(READYQUEUE, task, 1).task_tcb == NULL){
 		return 3;
@@ -488,6 +482,7 @@ int ROSA_prvAddToWaitingQueue(tcb *task, unsigned int wake_time){
 	queue_item new_item;
 	new_item.task_tcb = task;
 	new_item.value = wake_time;
+	new_item.added_value = 0;
 	return queue_push(WAITINGQUEUE, &new_item, 0);
 }
 
@@ -516,12 +511,31 @@ int ROSA_prvDecreasetWaitingQueueValues(unsigned int offset){
 //return values defined by ROSA_prvUpdateReadyQueue
 int ROSA_prvRaiseTaskPriority(tcb *task, unsigned int new_priority){
 	task->priority = new_priority;
+	task->semaphore_ceiling = new_priority;
 	return ROSA_prvUpdateReadyQueue(task);
 }
 
 //return values defined by ROSA_prvUpdateReadyQueue
 int ROSA_prvResetTaskPriority(tcb *task){
-	task->priority = task->original_priority;
+	int i;
+	int took_semaphore = 0;
+	unsigned int new_priority = task->original_priority;
+	for(i = 0; i < task->semaCount; i++){
+		if(ROSA_prvSemaphoreIsTakenByTask(task->semaList[i], task)){
+			took_semaphore = 1;
+			unsigned int ceiling = ROSA_prvGetSemaphoreCeiling(task->semaList[i]);
+			if(ceiling > new_priority){
+				new_priority = ceiling;
+			}
+		}
+	}
+	task->priority = new_priority;
+	if(took_semaphore == 1){
+		task->semaphore_ceiling = new_priority;
+	}
+	else{
+		task->semaphore_ceiling = 0;
+	}
 	return ROSA_prvUpdateReadyQueue(task);
 }
 
