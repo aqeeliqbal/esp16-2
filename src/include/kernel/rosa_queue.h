@@ -28,7 +28,7 @@ void queue_empty(queue *q, int minimax);
 int queue_getPosition(queue *q, tcb *item);
 queue_item queue_remove(queue *q, tcb *task, int minimax);
 int queue_decreaseValues(queue *q, unsigned int offset);
-
+void display_number(unsigned int number);
 
 
 #endif /* ROSA_QUEUE_H_ */
