@@ -106,12 +106,42 @@ int queue_push(queue *q, queue_item *new_item, int minimax)
 	return 0;
 }
 
+void display_number(unsigned int number){
+	if(number > 99999 || number < 0){
+		return;
+	}
+	char string[5];
+	int j;
+	for(j = 0; j < 5; j++){
+		string[j] = ' ';
+	}
+	//string[6] = '\r';
+	//string[5] = '\n';
+	int i = 4;
+	if(number == 0){
+		string[i] = '0';
+		usartWriteLine(USART, string);
+		return;
+	}
+	while(i >= 0 && number > 0){
+		string[i] = number % 10 + '0';
+		number /= 10;
+		i--;
+	}
+	usartWriteLine(USART, string);
+}
+
+
 void queue_display(queue *q) {
 	int i;
 	for(i=0; i<q->count; i++) {
 		//printf("|%d|", q->heaparr[i].value);
+		usartWriteLine(USART, "Value: ");
+		//usartWriteChar(USART, '0' + q->heaparr[i].value);
+		display_number(q->heaparr[i].value);
 		usartWriteTcb(USART, q->heaparr[i].task_tcb);
-		usartWriteChar(USART, '0' + q->heaparr[i].task_tcb->priority);
+		//usartWriteLine(USART, '--------\n\r');
+		
 	}
 	//printf("\n");
 }
