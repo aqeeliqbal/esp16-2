@@ -53,7 +53,7 @@ void task2(void* tcbArg) {
 	ticktime ticks;
 	int i;
 
-	ROSA_taskDelay(1100);
+	ROSA_taskDelay(1500);
 	ticks =  ROSA_getTicks();
 
 	while (1) {
@@ -84,12 +84,13 @@ void semaphoreTest() {
 	
 	ROSA_Extended_Init();
 	
+	
 	ROSA_semaphoreCreate(&sem[0]);
 	ROSA_semaphoreCreate(&sem[1]);
 	ROSA_semaphoreCreate(&sem[2]);
 	
-	ROSA_tcbCreate(&t1Handle,"task1",task1,t1_stack,MY_STACK_SIZE,2,NULL,sem,3);
-	ROSA_tcbCreate(&t2Handle,"task2",task2,t2_stack,MY_STACK_SIZE,3,NULL,&sem[1],2);
+	ROSA_tcbCreate(&t1Handle,"tsk1",task1,t1_stack,MY_STACK_SIZE,2,NULL,sem,3);
+	ROSA_tcbCreate(&t2Handle,"tsk2",task2,t2_stack,MY_STACK_SIZE,3,NULL,&sem[1],2);
 	//Deletes task 1
 	//ROSA_tcbDelete(&t2Handle);
 	

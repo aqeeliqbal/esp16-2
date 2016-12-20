@@ -8,6 +8,7 @@
 #include "kernel/rosa_ker.h"
 #include "kernel/rosa_scheduler.h"
 #include "kernel/rosa_sem.h"
+#include "kernel/rosa_debug.h"
 
 #include "drivers/led.h"
 #include <avr32/io.h>
@@ -71,9 +72,9 @@ void task2_2(void* tcbArg) {
 					int error = ROSA_semaphoreTake(sem_2[1]);
 					if(error != 0){
 						ledOn(LED3_GPIO);
-						usartWriteChar(USART, '-');
-						queue_display(READYQUEUE);
-						usartWriteChar(USART, '+');
+						//usartWriteChar(USART, '-');
+						//queue_display(READYQUEUE);
+						//usartWriteChar(USART, '+');
 					}
 					else{
 						ledOff(LED3_GPIO);
@@ -100,6 +101,7 @@ void semaphoreTest2() {
 	tcbHandle t2Handle;
 	
 	ROSA_Extended_Init();
+	debug_init(10);
 	
 	ROSA_semaphoreCreate(&sem_2[0]);
 	ROSA_semaphoreCreate(&sem_2[1]);

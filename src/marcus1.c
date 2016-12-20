@@ -22,7 +22,6 @@ task_3 is a control task to see if the system is still running.
 #include "drivers/usart.h"
 #include "kernel/rosa_scheduler.h"
 
-
 //Include configuration
 #include "rosa_config.h"
 #include "kernel/rosa_tim.h"
@@ -67,8 +66,6 @@ int task_1(void)
 			}
 			ledOff(LED4_GPIO);
 			ROSA_semaphoreGive(s1);
-			usartWriteChar(USART, '+');
-			queue_display(READYQUEUE);
 			ROSA_taskDelayUntil(&t, 200);
 		}
 	}
@@ -80,8 +77,6 @@ int task_2(void)
 	ticktime t;
 	while(1)
 	{
-		usartWriteChar(USART, '-');
-		queue_display(READYQUEUE);
 		t = ROSA_getTicks();
 		if(ROSA_semaphoreTake(s1) == 0){
 			ledOn(LED6_GPIO);
@@ -120,6 +115,7 @@ int testcase1_m(void)
 	ROSA_tcbCreate(&t1, "tsk1", task_1, stack1, STACK_SIZE, 2, NULL, &s1, 1);
 	ROSA_tcbCreate(&t2, "tsk2", task_2, stack2, STACK_SIZE, 2, NULL, &s1, 1);
 	ROSA_tcbCreate(&t3, "tsk3", task_3, stack3, STACK_SIZE, 4, NULL, NULL, 0);
+	
 	
 	// Start ROSA
 	if (ROSA_Extended_Start() != 0){

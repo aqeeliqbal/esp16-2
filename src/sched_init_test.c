@@ -38,7 +38,7 @@ int scheduler_init_test(void){
 	semHandle* semaphores = NULL;
 	int semaphore_number = 0;
 	ROSA_tcbCreate(&t_tcb, "tsk1", task, t_stack, T_STACK_SIZE, 3, arguments, semaphores, semaphore_number);
-	
+
 	ROSA_Extended_Start();
 	
 	while(1);
