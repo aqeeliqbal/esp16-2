@@ -98,7 +98,7 @@ int ROSA_prvclockTickCompare(void){  //put this in ISR or before scheduler
 int ROSA_prvClockOverflow(ticktime *start){
 	
 	ticktime min;
-	if ( ROSA_prvGetFirstWakeTime() < *start){
+	if ( ROSA_prvGetFirstWakeTime() < *start){ //if start is bigger, then clock must be bigger. interrupt causes
 		min = ROSA_prvGetFirstWakeTime();
 	}
 	else{
@@ -124,24 +124,24 @@ int ROSA_taskDelayUntil(ticktime *start, ticktime t){
 	tcb *readyP = NULL;
 	ticktime maxClock = MAX_TICK_COUNT;
 		
-	ticktime rest = maxClock - *start;
+	ticktime rest = maxClock - *start; // the remaining time before maxClock
 	int err;
 
-	if ((*start > ROSA_getTicks()) || *start >= maxClock ){
+	if ((*start > ROSA_getTicks()) || *start >= maxClock ){ //avoid user mistake to send a bigger/negative number.
 		return 1;
 	}
-	if (t >= maxClock){
+	if (t >= maxClock){ //results in cyclic overflow
 		return 2;
 	}
-	if (t >= rest){
-		ROSA_prvClockOverflow(start);
+	if (t >= rest){  //valid overflow, t is not bigger than maxClock since that is checked already
+		ROSA_prvClockOverflow(start); //subtract clk with start, subtracting tasks with clk could cause neg. values if interrupt disable 
 	}
-	if ((*start + t) <= ROSA_getTicks()){
+	if ((*start + t) <= ROSA_getTicks()){ //task code takes longer time than the delay period
 		return 3;
 	}
-	*start = *start + t;
+	*start = *start + t;   //add start tick value and period to get the delay time
 	interruptDisable();
-	readyP = ROSA_prvGetFirstFromReadyQueue();
+	readyP = ROSA_prvGetFirstFromReadyQueue();  //task that will be delayed
 	err = ROSA_prvRemoveFromReadyQueue(readyP);
 		
 	//usartWriteChar(USART, err + '0');
@@ -162,7 +162,7 @@ Delay
 //0 = fine
 //1 = invalid period set 
 
-int ROSA_taskDelay(ticktime t){
+int ROSA_taskDelay(ticktime t){   //if delayUntil returns other than zero, return error
 	ticktime wake = ROSA_getTicks();
 	if(ROSA_taskDelayUntil(&wake, t)){
 		return 1;
