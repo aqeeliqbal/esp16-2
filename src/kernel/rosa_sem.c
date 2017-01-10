@@ -165,7 +165,7 @@ int ROSA_prvSemaphoreRegister(semHandle s, tcb* task) {
 	//ptr->next = NULL;
 
 	if (temp == NULL || ptr->task->original_priority > temp->task->original_priority)
-	{					//Executes when linked list is empty
+	{					//Executes when linked list is empty or add the task in first index 'head of list'
 		ptr->next = sem->reglist;
 		sem->reglist = ptr;
 		
@@ -180,13 +180,14 @@ int ROSA_prvSemaphoreRegister(semHandle s, tcb* task) {
 
 	while (temp->next != NULL) {
 		if (ptr->task->original_priority > temp->next->task->original_priority) {
+			//execution  at n position of the list
 			ptr->next = temp->next;
 			temp->next = ptr;
 			return 0;
 		}
-		temp = temp->next;
+		temp = temp->next;	
 	}
-	
+		//execution  at end of the list 'tail'
 	temp->next = ptr;
 	return 0;
 }
@@ -200,13 +201,14 @@ int ROSA_prvSemaphoreUnregister(semHandle s, tcb* task) {
 	if (temp1 == NULL) {
 		return 1;
 	}
-
+		//execution  at the first position of the list 'head'.
 	if (temp1->task == task)
 	{
 		ptr = temp1;
 		sem->reglist = temp1->next;
 		free(ptr);
 		
+		// if semaphore is taken free it.
 		if (sem->owner == task) {
 			sem->owner = NULL;
 		}
@@ -224,6 +226,7 @@ int ROSA_prvSemaphoreUnregister(semHandle s, tcb* task) {
 	do {
 		if (temp1->next->task == task)
 		{
+			//execution  at n position of the list
 			ptr = temp1->next;
 			temp1->next = temp1->next->next;
 			free(ptr);
